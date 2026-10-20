@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milo — Milna Aasaan. Events Yaadgaar. Privacy Tumhari.</title>
+  <meta name="description" content="Discover Dandiya nights, DJ gigs, college fests, coworking meets, and social circles. Book BookMyShow-style passes and connect with verified people safely." />
+  
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Referral / Deep-link Banner (hidden unless ?ref= or /e/ link) -->
+  <div id="ref-banner" class="ref-banner" hidden>
+    <div class="ref-banner-inner">
+      <span id="ref-banner-text">Referral code applied</span>
+      <button id="ref-banner-cta" class="ref-banner-cta">Get the App</button>
+      <button id="ref-banner-close" class="ref-banner-close" aria-label="Close">&times;</button>
+    </div>
+  </div>
+
+  <!-- Glowing Ambient Background Canvas -->
+  <div class="glow-sphere glow-1"></div>
+  <div class="glow-sphere glow-2"></div>
+  <div class="glow-sphere glow-3"></div>
+
+  <!-- ── Header Navigation ── -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="bms-logo-badge">
+          <span class="logo-text">milo</span>
+          <i class="fa-solid fa-star star-icon"></i>
+        </div>
+        <span class="brand-tagline">MEET | VIBE | SHOW</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#events">Dandiya & Shows</a>
+        <a href="#personas">Who is it For?</a>
+        <a href="#safety">Safety Shield 🛡️</a>
+        <a href="#organizers">For Organizers</a>
+        <a href="#download" class="btn-download-nav">Get App Free <i class="fa-solid fa-arrow-down"></i></a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero Section ── -->
+  <section class="hero-section">
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <div class="badge-pill">
+          <span class="pulse-dot"></span>
+          <span>India's #1 Consent-First Social Events & Ticketing App</span>
+        </div>
+        <h1 class="hero-title">
+          Milna Aasaan.<br>
+          <span class="text-gradient">Events Yaadgaar.</span><br>
+          Privacy Tumhari.
+        </h1>
+        <p class="hero-subtitle">
+          Book BookMyShow-style passes for Dandiya Nights, Standup Shows, College Fests & Kitty Brunches. Match with verified squads, broadcast 2-hour Chai beacons, and enjoy 100% privacy protection.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="https://play.google.com/store/apps/details?id=app.milo.milo_mobile" id="btn-play-hero" class="btn-primary-hero" target="_blank" rel="noopener">
+            <i class="fa-brands fa-google-play"></i>
+            <div>
+              <span class="btn-subtext">DOWNLOAD FREE</span>
+              <span class="btn-maintext">Google Play Store</span>
+            </div>
+          </a>
+          <a href="#download" class="btn-secondary-hero">
+            <i class="fa-brands fa-apple"></i>
+            <div>
+              <span class="btn-subtext">COMING SOON</span>
+              <span class="btn-maintext">iOS App Store</span>
+            </div>
+          </a>
+        </div>
+
+        <div class="hero-social-proof">
+          <div class="avatar-stack">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="User">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" alt="User">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80" alt="User">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80" alt="User">
+            <span class="avatar-counter">+48k</span>
+          </div>
+          <div class="proof-text">
+            <strong>48,200+ Active Squads</strong>
+            <span>Verified with 3D Face Mesh & 4.9★ Ratings</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- App Mockup Visual -->
+      <div class="hero-mockup-wrapper">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="mockup-header">
+              <div class="bms-logo-badge small">
+                <span>milo</span>
+                <i class="fa-solid fa-star"></i>
+              </div>
+              <span class="mockup-city"><i class="fa-solid fa-location-dot"></i> Lucknow, IN</span>
+            </div>
+
+            <div class="mockup-hero-card">
+              <span class="event-tag">GRAND DANDIYA 2026</span>
+              <h3>Navratri Rass Mahotsav</h3>
+              <p>Oct 03 • Ekana Club Lawns</p>
+              <div class="ticket-strip">
+                <span>Passes from ₹399</span>
+                <span class="bms-btn">Book Pass</span>
+              </div>
+            </div>
+
+            <!-- Meetup Beacon Preview -->
+            <div class="mockup-beacon-card">
+              <div class="beacon-avatar">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Avatar">
+                <span class="live-status"></span>
+              </div>
+              <div class="beacon-info">
+                <h4>Ananya • Chai & Garba Jam ☕</h4>
+                <p>15m ago • Roastery Cafe (3 spots left)</p>
+              </div>
+              <span class="connect-chip">Join</span>
+            </div>
+
+            <!-- Trust Badge Card -->
+            <div class="mockup-trust-card">
+              <div class="trust-stat">
+                <strong>4.96 ⭐</strong>
+                <span>68 Reviews</span>
+              </div>
+              <div class="trust-divider"></div>
+              <div class="trust-stat">
+                <strong>48</strong>
+                <span>Meetups Done</span>
+              </div>
+              <div class="trust-divider"></div>
+              <div class="trust-stat">
+                <strong class="green-text">99%</strong>
+                <span>Reliability</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 4 Pillars of Milo ── -->
+  <section class="section-pillars" id="features">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-tag">POWERFUL FEATURES</span>
+        <h2>Everything You Need for Social Fun & Event Passes</h2>
+        <p>Engineered for high-energy Indian cultural festivals, urban networking, and safe casual meetups.</p>
+      </div>
+
+      <div class="pillars-grid">
+        <div class="pillar-card">
+          <div class="pillar-icon red-icon"><i class="fa-solid fa-ticket"></i></div>
+          <h3>BookMyShow-Style Ticketing</h3>
+          <p>Tiered seat pricing (General, Couple, Squad Table, VIP Lounge), organizer promo coupons, and fast-track QR scanner passes.</p>
+          <ul class="feature-bullets">
+            <li><i class="fa-solid fa-check"></i> Instant digital QR Pass with offline mode</li>
+            <li><i class="fa-solid fa-check"></i> Google Maps directions & 30-min auto alert</li>
+            <li><i class="fa-solid fa-check"></i> 1-way Host Broadcast Channel (Zero Spam)</li>
+          </ul>
+        </div>
+
+        <div class="pillar-card">
+          <div class="pillar-icon cyan-icon"><i class="fa-solid fa-handshake"></i></div>
+          <h3>Universal Match & Chai Beacons</h3>
+          <p>Broadcast 2-hour temporary activity beacons or match by vibe tags. Meet up for bowling, coding jams, or kitty parties.</p>
+          <ul class="feature-bullets">
+            <li><i class="fa-solid fa-check"></i> 2-Hour "Hangout Now" Live Radar</li>
+            <li><i class="fa-solid fa-check"></i> Swipe Deck or Filtered Category Lists</li>
+            <li><i class="fa-solid fa-check"></i> Rapido Captain-style Trust & Review Scores</li>
+          </ul>
+        </div>
+
+        <div class="pillar-card">
+          <div class="pillar-icon amber-icon"><i class="fa-solid fa-shield-halved"></i></div>
+          <h3>Privacy Shield & Safety Tools</h3>
+          <p>Consent-first architecture. Your private phone number and home coordinates are never publicly revealed.</p>
+          <ul class="feature-bullets">
+            <li><i class="fa-solid fa-check"></i> 3D AI Facial Mesh & Liveness anti-catfish</li>
+            <li><i class="fa-solid fa-check"></i> Ghost Mode & Incognito Event Attendance</li>
+            <li><i class="fa-solid fa-check"></i> 1-Tap Emergency SOS & Fake Call Exit tool</li>
+          </ul>
+        </div>
+
+        <div class="pillar-card">
+          <div class="pillar-icon purple-icon"><i class="fa-solid fa-user-shield"></i></div>
+          <h3>Organizer & Gate Access Control</h3>
+          <p>Organizers manage events, assign role-locked scanner devices to staff, and receive 3-5 day fraud-free settlements.</p>
+          <ul class="feature-bullets">
+            <li><i class="fa-solid fa-check"></i> Specific Gate Passcode Lock (No Intrusion)</li>
+            <li><i class="fa-solid fa-check"></i> 100% Host Zero Liability Legal Framework</li>
+            <li><i class="fa-solid fa-check"></i> Real-time Sales, Check-in & Revenue Analytics</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Who Is Milo For (Personas) ── -->
+  <section class="section-personas" id="personas">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-tag">COMMUNITIES & CIRCLES</span>
+        <h2>Built for Every Social Archetype in Your City</h2>
+        <p>From energetic college squads to sophisticated high-tea ladies and startup founders.</p>
+      </div>
+
+      <div class="personas-grid">
+        <div class="persona-chip">
+          <span class="persona-emoji">🪘</span>
+          <div>
+            <h4>Dandiya & Festive Squads</h4>
+            <p>Coordinate matching traditional outfits, group passes & carpooling.</p>
+          </div>
+        </div>
+
+        <div class="persona-chip">
+          <span class="persona-emoji">🎓</span>
+          <div>
+            <h4>College Students & Gamers</h4>
+            <p>Campus fest battle passes, PS5 gaming leagues & hackathon teams.</p>
+          </div>
+        </div>
+
+        <div class="persona-chip">
+          <span class="persona-emoji">💻</span>
+          <div>
+            <h4>Remote Founders & Devs</h4>
+            <p>Cafe coworking sprints, tech brainstorming & chai breaks.</p>
+          </div>
+        </div>
+
+        <div class="persona-chip">
+          <span class="persona-emoji">💅</span>
+          <div>
+            <h4>Kitty Parties & Ladies High-Tea</h4>
+            <p>Buffet brunches, themed table bookings & cash-prize Tambola rounds.</p>
+          </div>
+        </div>
+
+        <div class="persona-chip">
+          <span class="persona-emoji">🧘</span>
+          <div>
+            <h4>Yoga & Sunrise Fitness</h4>
+            <p>Outdoor 6 AM Cubbon park flows, Tibetan sound baths & 5K runs.</p>
+          </div>
+        </div>
+
+        <div class="persona-chip">
+          <span class="persona-emoji">🎤</span>
+          <div>
+            <h4>Standup Comics & Open Mics</h4>
+            <p>Comedy club table reservations, open stage slots & jamming.</p>
+          </div>
+        </div>
+
+        <div class="persona-chip">
+          <span class="persona-emoji">💑</span>
+          <div>
+            <h4>Couples & Date Planner</h4>
+            <p>Salsa date nights, acoustic gigs, and digital couple games.</p>
+          </div>
+        </div>
+
+        <div class="persona-chip">
+          <span class="persona-emoji">👴</span>
+          <div>
+            <h4>Senior Citizens Walking Club</h4>
+            <p>Morning garden walks, tea stalls & peaceful park chess matches.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Safety Shield & Emergency Exit Callout ── -->
+  <section class="section-safety" id="safety">
+    <div class="container safety-box">
+      <div class="safety-content">
+        <div class="shield-badge"><i class="fa-solid fa-lock"></i> PRIVACY-FIRST PLATFORM</div>
+        <h2>Your Safety is Non-Negotiable</h2>
+        <p>Milo gives you complete autonomy over your privacy. No one can see your ticket purchases, phone number, or exact location without your explicit consent.</p>
+
+        <div class="safety-features-list">
+          <div class="safety-item">
+            <i class="fa-solid fa-fingerprint"></i>
+            <div>
+              <h4>3D Facial Biometric Verification</h4>
+              <p>Real-time smile and blink liveness test to eliminate fake profiles & bots with a 99.4% match rate.</p>
+            </div>
+          </div>
+          <div class="safety-item">
+            <i class="fa-solid fa-phone-volume"></i>
+            <div>
+              <h4>Fake Call Exit Simulator</h4>
+              <p>Simulate an urgent incoming call on your phone to gracefully excuse yourself from uncomfortable situations.</p>
+            </div>
+          </div>
+          <div class="safety-item">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+              <h4>1-Tap Emergency SOS Alert</h4>
+              <p>Broadcast your live event coordinates instantly to your 2 designated emergency contacts.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Call to Action / App Download ── -->
+  <section class="section-download" id="download">
+    <div class="container text-center">
+      <div class="bms-logo-badge large center">
+        <span>milo</span>
+        <i class="fa-solid fa-star"></i>
+      </div>
+      <h2>Ready to Experience Milo?</h2>
+      <p class="cta-desc">Download Milo 100% Free today. Book event passes, connect with people, and experience social discovery on your own terms.</p>
+
+      <div class="download-btns">
+        <a href="https://play.google.com/store/apps/details?id=app.milo.milo_mobile" id="btn-play" class="btn-store-primary" target="_blank" rel="noopener">
+          <i class="fa-brands fa-google-play"></i>
+          <span>Get it on Google Play</span>
+        </a>
+        <a href="#download" id="btn-ios" class="btn-store-primary">
+          <i class="fa-brands fa-apple"></i>
+          <span>App Store — Coming Soon</span>
+        </a>
+      </div>
+
+      <div class="qr-download-container">
+        <div class="qr-box" id="qr-code"></div>
+        <p>Scan to download Milo on Android</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        <div class="bms-logo-badge small">
+          <span>milo</span>
+          <i class="fa-solid fa-star"></i>
+        </div>
+        <p>Milna Aasaan. Events Yaadgaar. Privacy Tumhari.</p>
+        <span class="copy">&copy; 2026 Milo Social & Events Network. All rights reserved.</span>
+      </div>
+
+      <div class="footer-links">
+        <div class="footer-col">
+          <h5>Platform</h5>
+          <a href="#events">BookMyShow Passes</a>
+          <a href="#personas">Social Circles</a>
+          <a href="#safety">Safety Shield</a>
+        </div>
+        <div class="footer-col">
+          <h5>Organizers</h5>
+          <a href="#download">Host an Event</a>
+          <a href="#download">Gate Role Passcodes</a>
+          <a href="#download">3-5 Days Escrow</a>
+        </div>
+        <div class="footer-col">
+          <h5>Legal & Security</h5>
+          <a href="#safety">Terms of Service</a>
+          <a href="#safety">Privacy Policy</a>
+          <a href="#safety">Zero Liability Rules</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- QR library (client-side, no backend needed) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    (function () {
+      var PLAY_URL = 'https://play.google.com/store/apps/details?id=app.milo.milo_mobile';
+      var DEEP_SCHEME = 'milo://m';
+
+      // ── Parse route: Vercel rewrites every path to index.html ──
+      var path = location.pathname.replace(/\/+$/, '');
+      var params = new URLSearchParams(location.search);
+      var seg = path.split('/').filter(Boolean); // e.g. ['e','e1'] or ['m','ABC123'] or ['download','join-x']
+
+      var ref = (params.get('ref') || '').trim().toUpperCase();
+      var eventId = '';
+      var routeKind = '';
+
+      if (seg[0] === 'e' && seg[1]) {
+        routeKind = 'event';
+        eventId = seg[1];
+        if (!ref) ref = (params.get('code') || '').trim().toUpperCase();
+      } else if (seg[0] === 'm' && seg[1]) {
+        routeKind = 'invite';
+        ref = ref || seg[1].toUpperCase();
+      } else if (seg[0] === 'download') {
+        routeKind = 'download';
+        if (seg[1] && seg[1].toLowerCase().indexOf('join-') === 0) {
+          ref = ref || seg[1].split('-')[1].toUpperCase();
+        }
+      } else if (seg[0] === 'pass') {
+        routeKind = 'pass';
+      } else if (seg[0] === 'promoter') {
+        routeKind = 'promoter';
+      } else if (ref) {
+        routeKind = 'ref';
+      }
+
+      // Persist referral across the download journey
+      if (ref) {
+        try {
+          localStorage.setItem('milo_ref', ref);
+          if (eventId) localStorage.setItem('milo_ref_event', eventId);
+        } catch (e) { /* private mode */ }
+      } else {
+        try {
+          ref = (localStorage.getItem('milo_ref') || '').toUpperCase();
+          eventId = eventId || (localStorage.getItem('milo_ref_event') || '');
+        } catch (e) { /* private mode */ }
+      }
+
+      // Play Store link with install-referrer attribution when ?ref= present
+      var playUrl = PLAY_URL + (ref ? '&referrer=' + encodeURIComponent('ref=' + ref + (eventId ? '&event=' + eventId : '')) : '');
+
+      // Rewire all Play Store buttons
+      ['btn-play', 'btn-play-hero'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.href = playUrl;
+      });
+
+      // iOS coming-soon tap feedback
+      var iosBtn = document.getElementById('btn-ios');
+      if (iosBtn) {
+        iosBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          showBanner('iOS launch coming soon — grab the Android app 📲', playUrl);
+          document.getElementById('download').scrollIntoView({ behavior: 'smooth' });
+        });
+      }
+
+      // Real QR code of the Play Store link
+      var qrTarget = document.getElementById('qr-code');
+      if (qrTarget && typeof QRCode !== 'undefined') {
+        new QRCode(qrTarget, {
+          text: playUrl,
+          width: 120,
+          height: 120,
+          colorDark: '#15131A',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } else if (qrTarget) {
+        qrTarget.innerHTML = '<a href="' + playUrl + '" style="font-size:12px;font-weight:800;color:#000;text-decoration:none;">GET MILO →</a>';
+      }
+
+      // ── Banner ──
+      var banner = document.getElementById('ref-banner');
+      var bannerText = document.getElementById('ref-banner-text');
+      var bannerCta = document.getElementById('ref-banner-cta');
+      var bannerClose = document.getElementById('ref-banner-close');
+      var bannerUrl = playUrl;
+
+      function showBanner(text, url) {
+        if (!banner) return;
+        bannerText.textContent = text;
+        bannerUrl = url || playUrl;
+        banner.hidden = false;
+      }
+
+      bannerClose.addEventListener('click', function () { banner.hidden = true; });
+      bannerCta.addEventListener('click', function () { location.href = bannerUrl; });
+
+      // "Open in App" — try the Milo app first, fall back to the store
+      function tryOpenApp(fallbackUrl) {
+        var appUrl = DEEP_SCHEME + '/' + (routeKind === 'event' && eventId ? 'e/' + eventId + (ref ? '?ref=' + ref : '') : (ref ? 'm/' + ref : 'home'));
+        var timer = setTimeout(function () { location.href = fallbackUrl; }, 2500);
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) clearTimeout(timer);
+        });
+        location.href = appUrl;
+      }
+
+      // Route-specific messaging
+      if (routeKind === 'event') {
+        showBanner(
+          (ref ? 'Referral code ' + ref + ' unlocked 🎉 — ' : '') +
+          'Someone invited you to a Milo event. Get the app to book your pass.',
+          playUrl
+        );
+        var ctaWrap = document.querySelector('.hero-cta-group');
+        if (ctaWrap) {
+          var openApp = document.createElement('a');
+          openApp.href = '#';
+          openApp.className = 'btn-primary-hero';
+          openApp.innerHTML = '<i class="fa-solid fa-mobile-screen"></i><div><span class="btn-subtext">INSTALLED MILO?</span><span class="btn-maintext">Open in App</span></div>';
+          openApp.addEventListener('click', function (e) {
+            e.preventDefault();
+            tryOpenApp(playUrl);
+          });
+          ctaWrap.insertBefore(openApp, ctaWrap.firstChild);
+        }
+      } else if (routeKind === 'invite') {
+        showBanner((ref ? 'Squad invite code ' + ref + ' 🎟️ — ' : '') + 'Download Milo & enter this code to join your friend’s squad.', playUrl);
+      } else if (routeKind === 'pass') {
+        showBanner('You have a Milo verified pass 🔐 — open the app to view & show your entry QR.', playUrl);
+      } else if (routeKind === 'promoter') {
+        showBanner('Become a Milo promoter 📢 — earn 10% commission per ticket. Get the app to sign up.', playUrl);
+      } else if (ref) {
+        showBanner('Referral code ' + ref + ' applied 🎉 — download Milo to use it.', playUrl);
+      }
+    })();
+  </script>
+
+</body>
+</html>
