@@ -1,0 +1,5 @@
+package app.milo.milo_mobile
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

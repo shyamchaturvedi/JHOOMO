@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "367531407467",
+    "project_id": "milo-da65c",
+    "storage_bucket": "milo-da65c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:367531407467:android:eeda839aabbfa51107192e",
+        "android_client_info": {
+          "package_name": "app.milo.milo_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "367531407467-hlsvq97lha3k1gg819stcuno96lrahrg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.milo.milo_mobile",
+            "certificate_hash": "2f358d9c4efd6bb176866d33a09bda84c8a09c46"
+          }
+        },
+        {
+          "client_id": "367531407467-dg2ht8m3upb65it54fm8a9i87kunk27k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANThDrjMQpbrIMTnYsb0BS3VPo0PYutRo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "367531407467-dg2ht8m3upb65it54fm8a9i87kunk27k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
