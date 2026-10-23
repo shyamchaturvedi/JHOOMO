@@ -20,6 +20,75 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
   String _selectedRoleFilter = 'ALL';
   late Stream<List<CommunityPost>> _postsStream;
 
+  static final List<CommunityPost> _defaultCuratedPosts = [
+    const CommunityPost(
+      id: 'curated_post_1',
+      authorName: 'Utsav Events Lucknow',
+      authorRole: 'ORGANIZER',
+      roleBadge: 'Verified Organizer',
+      authorAvatar:
+          'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=200&q=80',
+      content:
+          '🎉 Dandiya Raas Utsav 2026 Phase-1 Passes are officially LIVE on JHOOMO! Free traditional Gujarati dhol players and free LED dandiya sticks for the first 200 early-bird arrivals.',
+      eventTag: 'Dandiya Raas Utsav 2026',
+      eventId: 'e1',
+      timeAgo: '1 hr ago',
+      likesCount: 142,
+      commentsCount: 28,
+      mediaUrl:
+          'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1000&q=80',
+      isCollabOpen: true,
+      collabType: 'Creator Pass & Promotion',
+      socialHandle: '@utsav.events.lko',
+      isOfficialCollab: true,
+      officialPromoCode: 'UTSAV20',
+      organizerApprovedDiscount: 20.0,
+      bookingsViaCreatorCount: 89,
+    ),
+    const CommunityPost(
+      id: 'curated_post_2',
+      authorName: 'DJ Harsh (Electronic Beats)',
+      authorRole: 'ARTIST',
+      roleBadge: 'Headliner Artist',
+      authorAvatar:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+      content:
+          'Dropping a brand new Dandiya-EDM fusion set exclusively at Excellia School venue! Who all are ready with their ethnic outfits? Drop a comment! 🔥🪘',
+      eventTag: 'Dandiya Raas Utsav 2026',
+      eventId: 'e1',
+      timeAgo: '3 hrs ago',
+      likesCount: 96,
+      commentsCount: 15,
+      mediaUrl:
+          'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1000&q=80',
+      isCollabOpen: false,
+    ),
+    const CommunityPost(
+      id: 'curated_post_3',
+      authorName: 'Riya Lifestyle & Fashion',
+      authorRole: 'INFLUENCER',
+      roleBadge: 'Verified Creator',
+      authorAvatar:
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+      content:
+          'Collaborating officially with JHOOMO for the biggest Dandiya night in Lucknow! Use my exclusive creator tag for instant verified VIP entry and backstage access.',
+      eventTag: 'Dandiya Raas Utsav 2026',
+      eventId: 'e1',
+      timeAgo: '5 hrs ago',
+      likesCount: 64,
+      commentsCount: 11,
+      mediaUrl:
+          'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1000&q=80',
+      isCollabOpen: true,
+      collabType: 'Brand Promotion',
+      socialHandle: '@riya_lifestyle',
+      isOfficialCollab: true,
+      officialPromoCode: 'RIYA10',
+      organizerApprovedDiscount: 10.0,
+      bookingsViaCreatorCount: 34,
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -235,7 +304,8 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
             );
           }
 
-          final posts = snapshot.data ?? const <CommunityPost>[];
+          final livePosts = snapshot.data ?? const <CommunityPost>[];
+          final posts = livePosts.isNotEmpty ? livePosts : _defaultCuratedPosts;
           final filtered = _selectedRoleFilter == 'ALL'
               ? posts
               : posts

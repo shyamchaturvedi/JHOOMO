@@ -3,15 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/milo_db_service.dart';
 import '../services/mock_data.dart';
-import '../services/payment_approval_service.dart';
 import '../models/models.dart';
 import '../theme/milo_theme.dart';
 import 'event_details_screen.dart';
-import 'my_tickets_screen.dart';
 import 'your_bookings_screen.dart';
-import 'dandiya_special_screen.dart';
 import 'notifications_screen.dart';
-import '../widgets/app_logo.dart';
 import '../widgets/bms_pick_region_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -25,9 +21,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
- String _selectedCity = 'Lucknow';
- String _selectedCategory = 'All';
- int _heroCurrentIndex = 0;
+  String _selectedCity = 'Lucknow';
+  int _heroCurrentIndex = 0;
  late final PageController _heroPageController;
  Timer? _heroTimer;
  List<EventModel> _liveEvents = [];
@@ -572,7 +567,14 @@ class _HomeScreenState extends State<HomeScreen> {
  itemCount: allEvents.length,
  itemBuilder: (context, index) {
  final event = allEvents[index];
- return Container(
+ return GestureDetector(
+ onTap: () {
+ Navigator.push(
+ context,
+ MaterialPageRoute(builder: (_) => EventDetailsScreen(event: event)),
+ );
+ },
+ child: Container(
  width: 175,
  margin: const EdgeInsets.symmetric(horizontal: 5),
  decoration: BoxDecoration(
@@ -685,6 +687,7 @@ class _HomeScreenState extends State<HomeScreen> {
  ),
  ),
  ],
+ ),
  ),
  );
  },

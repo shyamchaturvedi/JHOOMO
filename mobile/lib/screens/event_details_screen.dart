@@ -7,6 +7,8 @@ import '../theme/milo_theme.dart';
 import 'chat/host_broadcast_channel_screen.dart';
 import '../widgets/milo_bms_payment_sheet.dart';
 import '../services/milo_promoter_tracking_service.dart';
+import '../services/milo_wishlist_service.dart';
+import '../services/milo_session_service.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final EventModel event;
@@ -36,6 +38,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   @override
   void initState() {
     super.initState();
+    _interestedCount = widget.event.interestedCount;
     final deepLinkCode = widget.initialPromoCode?.trim().toUpperCase();
     if (deepLinkCode != null && deepLinkCode.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -513,7 +516,31 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     size: 18,
                   ),
                 ),
-                onPressed: () => setState(() => _isFavorite = !_isFavorite),
+                onPressed: () async {
+                  final added = await MiloWishlistService.instance.toggle(
+                    MiloSessionService.currentUid,
+                    widget.event.id,
+                  );
+                  if (!mounted) return;
+                  setState(() {
+                    _isFavorite = added;
+                    _isInterested = added;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: MiloColors.bgSurface,
+                      content: Text(
+                        added
+                            ? '❤️ Event saved to your Wishlist!'
+                            : 'Removed from your Wishlist.',
+                        style: GoogleFonts.inter(
+                          color: added ? MiloColors.rose : MiloColors.textSecondary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
               IconButton(
                 icon: Container(
