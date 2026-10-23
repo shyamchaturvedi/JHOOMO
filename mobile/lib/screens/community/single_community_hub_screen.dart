@@ -1,3 +1,4 @@
+import '../../services/milo_session_service.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -117,21 +118,7 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
         commentsCount: 16,
         isCollabOpen: true,
         collabType: 'Stall Partnership 🤝',
-      ),
-      CommunityPost(
-        id: 'post-5',
-        authorName: 'Kavya & Squad',
-        authorRole: 'ATTENDEE',
-        roleBadge: 'VIP Attendee 👥',
-        authorAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
-        content:
-            'We are a group of 4 girls traveling from Hazratganj to Sanskriti Lawns on Saturday 7 PM. 2 carpool seats open in our car for friendly girls/couples to split fuel & jam on the way! Hit me up in DMs! 🚗✨',
-        eventTag: 'Grand Dandiya Mahotsav 2026 ✨',
-        eventId: 'e1',
-        timeAgo: '5h ago',
-        likesCount: 88,
-        commentsCount: 21,
-      ),
+      )
     ];
   }
 
@@ -305,6 +292,37 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
   }
 
   void _openCreatePostModal() {
+    final userRole = MiloSessionService.currentRoleNotifier.value;
+    if (userRole == null || userRole == MiloRole.customer) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: MiloColors.bgSurface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              const Icon(Icons.verified_user_rounded, color: MiloColors.primaryLight, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                'Creator / Host Only',
+                style: GoogleFonts.inter(color: MiloColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 16),
+              ),
+            ],
+          ),
+          content: Text(
+            'Community publishing is exclusively for verified Event Organizers, Promoters, and Headline Artists.\n\nAttendees can like, comment, and engage with event updates below.',
+            style: GoogleFonts.inter(color: MiloColors.textSecondary, fontSize: 13, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Got It', style: GoogleFonts.inter(color: MiloColors.primaryLight, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
     String selectedRole = 'INFLUENCER';
     String selectedEvent = MockData.events.first.title;
     final contentController = TextEditingController();
@@ -377,8 +395,7 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
                               _buildRoleSelectorChip('ARTIST', 'Artist / Performer 🎤', selectedRole, (r) => setModalState(() => selectedRole = r)),
                               const SizedBox(width: 8),
                               _buildRoleSelectorChip('SPONSOR', 'Sponsor / Brand 💼', selectedRole, (r) => setModalState(() => selectedRole = r)),
-                              const SizedBox(width: 8),
-                              _buildRoleSelectorChip('ATTENDEE', 'Attendee / Squad 👥', selectedRole, (r) => setModalState(() => selectedRole = r)),
+                              
                             ],
                           ),
                         ),
@@ -596,7 +613,7 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
               ],
             ),
             Text(
-              'Organizers • Influencers • Artists • Sponsors • Squads',
+              'Official Event Updates • Influencers • Artists • Sponsors',
               style: GoogleFonts.inter(fontSize: 10, color: MiloColors.textSecondary),
             ),
           ],
@@ -677,8 +694,7 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
                 _buildFilterTab('ARTIST', 'Artists 🎤'),
                 const SizedBox(width: 8),
                 _buildFilterTab('SPONSOR', 'Sponsors 💼'),
-                const SizedBox(width: 8),
-                _buildFilterTab('ATTENDEE', 'Attendees 👥'),
+                
               ],
             ),
           ),

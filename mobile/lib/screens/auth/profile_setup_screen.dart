@@ -16,20 +16,20 @@ enum MiloUserRole {
 class ProfileSetupScreen extends StatefulWidget {
  final String phoneNumber;
 
- const ProfileSetupScreen({super.key, this.phoneNumber = '9876543210'});
+ const ProfileSetupScreen({super.key, this.phoneNumber = ''});
 
  @override
  State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
- final TextEditingController _nameController = TextEditingController(text: 'Sahil Kumar');
+ final TextEditingController _nameController = TextEditingController();
  int _selectedAge = 23;
  String _selectedCity = 'Lucknow';
  MiloUserRole _selectedRole = MiloUserRole.customer;
  bool _isAdminAllowed = false;
  bool _saving = false;
- final List<String> _selectedVibes = [' Garba Lover', ' Startups & Tech'];
+ final List<String> _selectedVibes = [];
 
  String get _phone => widget.phoneNumber;
 
