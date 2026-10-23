@@ -19,7 +19,10 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  bool _isSaving = false;
 
  // Step 1 Controllers (Organisation Details)
- final TextEditingController _panController = TextEditingController();
+  final TextEditingController _panController = TextEditingController(text: 'DBKPC5142M');
+  bool _isPanVerifying = false;
+  bool _isPanVerified = false;
+  String? _panVerifiedCategory;
  final TextEditingController _orgNameController = TextEditingController();
  final TextEditingController _addressController = TextEditingController();
  final TextEditingController _cityController = TextEditingController();
@@ -79,6 +82,33 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  if (digits.length == 12 && digits.startsWith('91')) return '+$digits';
  return _contactMobileController.text.trim();
  }
+
+  Future<void> _verifyPanWithSandbox() async {
+    final pan = _panController.text.trim().toUpperCase();
+    if (!RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$').hasMatch(pan)) {
+      _showSnack('Please enter a valid 10-character PAN number');
+      return;
+    }
+
+    setState(() => _isPanVerifying = true);
+    final result = await SandboxKycService.instance.verifyPan(
+      pan: pan,
+      nameAsPerPan: _orgNameController.text.trim(),
+      dateOfBirth: '01/01/2000',
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _isPanVerifying = false;
+      _isPanVerified = result.isValid;
+      _panVerifiedCategory = result.category;
+      if (result.isValid && result.aadhaarSeedingStatus != null) {
+        _panAadhaarStatus = result.aadhaarSeedingStatus == 'y' ? 'Yes' : 'No';
+      }
+    });
+
+    _showSnack(result.message, isSuccess: result.isValid);
+  }
 
  Future<void> _verifyBank() async {
  if (_accountNumberController.text.length < 9) {
@@ -629,14 +659,69 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  _sectionHeader('Organisation Details'),
  const SizedBox(height: 16),
 
- _fieldLabel('Organisation/Individual PAN card number'),
- const SizedBox(height: 6),
- TextField(
- controller: _panController,
- textCapitalization: TextCapitalization.characters,
- maxLength: 10,
- decoration: _inputDecoration('Enter PAN card number'),
- ),
+  Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      _fieldLabel('Organisation/Individual PAN card number'),
+      if (_isPanVerified)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: const Color(0xFF10B981).withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFF10B981)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 13),
+              const SizedBox(width: 4),
+              Text(
+                _panVerifiedCategory != null
+                    ? 'Verified (${_panVerifiedCategory!.toUpperCase()})'
+                    : 'Verified NSDL',
+                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: const Color(0xFF10B981)),
+              ),
+            ],
+          ),
+        ),
+    ],
+  ),
+  const SizedBox(height: 6),
+  Row(
+    children: [
+      Expanded(
+        child: TextField(
+          controller: _panController,
+          textCapitalization: TextCapitalization.characters,
+          maxLength: 10,
+          decoration: _inputDecoration('Enter PAN card number').copyWith(counterText: ''),
+          onChanged: (val) {
+            if (_isPanVerified) setState(() => _isPanVerified = false);
+          },
+        ),
+      ),
+      const SizedBox(width: 10),
+      SizedBox(
+        height: 48,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _isPanVerified ? const Color(0xFF10B981) : const Color(0xFF1E3A8A),
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          onPressed: _isPanVerifying ? null : _verifyPanWithSandbox,
+          child: _isPanVerifying
+              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : Text(
+                  _isPanVerified ? 'Verified ✓' : 'Verify PAN',
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                ),
+        ),
+      ),
+    ],
+  ),
  Text(
  'PAN will be used to retrieve name and GSTINs (if available).',
  style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF94A3B8)),
