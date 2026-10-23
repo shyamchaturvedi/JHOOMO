@@ -28,6 +28,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   String? _appliedPromoCode;
   double _discountAmount = 0.0;
   bool _isGroupBooking = false;
+  bool _isInterested = false;
+  late int _interestedCount;
+  int? _expandedFaqIndex;
+
 
   @override
   void initState() {
@@ -596,6 +600,93 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           event.title,
                           style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white, height: 1.2),
                         ),
+                        const SizedBox(height: 10),
+                        // BMS-Style Meta Pills (Language, Duration, Age)
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            _buildMetaPill(event.language, Icons.translate_rounded),
+                            _buildMetaPill(event.duration, Icons.timer_outlined),
+                            _buildMetaPill(event.ageLimit, Icons.person_outline_rounded),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Interactive Interested & Bookmark Bar
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.thumb_up_alt_rounded, color: MiloColors.amber, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '$_interestedCount are interested',
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _isInterested = !_isInterested;
+                                    _interestedCount += _isInterested ? 1 : -1;
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: MiloColors.bgSurface,
+                                      content: Text(
+                                        _isInterested
+                                            ? 'Added to your Wishlist & Reminders! ⭐'
+                                            : 'Removed from interested.',
+                                        style: GoogleFonts.inter(
+                                          color: MiloColors.primaryLight,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: _isInterested ? MiloColors.primary : Colors.white.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        _isInterested ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                        color: Colors.white,
+                                        size: 14,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _isInterested ? 'Interested ✓' : 'Interested',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -774,7 +865,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(event.venue, style: GoogleFonts.inter(color: MiloColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 13)),
-                                  Text('${event.city}, India • Free Parking Available', style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11)),
+                                  Text(
+                                    event.landmarkAddress.isNotEmpty
+                                        ? '${event.venue}, ${event.landmarkAddress}'
+                                        : '${event.city}, India • Monitored Free Parking',
+                                    style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11, height: 1.3),
+                                  ),
                                 ],
                               ),
                             ),
@@ -1103,6 +1199,216 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   }),
                   const SizedBox(height: 16),
 
+                  // ── 1. WHY YOU SHOULD ATTEND (HIGHLIGHTS CARDS) ──
+                  if (event.highlights.isNotEmpty) ...[
+                    Text('Why You Should Attend 🌟', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: MiloColors.textPrimary)),
+                    const SizedBox(height: 10),
+                    ...event.highlights.map((highlight) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: MiloColors.bgSurface.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: MiloColors.glassBorder),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: MiloColors.primary.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.star_rounded, color: MiloColors.primaryLight, size: 14),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                highlight,
+                                style: GoogleFonts.inter(color: MiloColors.textPrimary, fontSize: 12, height: 1.4, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // ── 2. ARTIST & PERFORMER LINEUP ──
+                  if (event.performers.isNotEmpty) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Artist Lineup 🎧', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: MiloColors.textPrimary)),
+                        Text('${event.performers.length} Performers', style: GoogleFonts.inter(color: MiloColors.emerald, fontSize: 12, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 125,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: event.performers.length,
+                        itemBuilder: (context, idx) {
+                          final p = event.performers[idx];
+                          return Container(
+                            width: 110,
+                            margin: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: MiloColors.bgSurface.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: MiloColors.glassBorder),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius: 26,
+                                  backgroundImage: NetworkImage(p['image'] ?? 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=300&q=80'),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  p['name'] ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: MiloColors.textPrimary),
+                                ),
+                                Text(
+                                  p['role'] ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(fontSize: 9, color: MiloColors.textMuted),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // ── 3. INCLUSIONS & EXCLUSIONS GRID ──
+                  if (event.inclusions.isNotEmpty || event.exclusions.isNotEmpty) ...[
+                    Text("What's Included & Excluded 📋", style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: MiloColors.textPrimary)),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: MiloColors.bgSurface.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: MiloColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (event.inclusions.isNotEmpty) ...[
+                            Row(
+                              children: [
+                                const Icon(Icons.check_circle_rounded, color: MiloColors.emerald, size: 16),
+                                const SizedBox(width: 6),
+                                Text('INCLUDED WITH PASS', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: MiloColors.emerald)),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            ...event.inclusions.map((inc) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 6, bottom: 4),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('• ', style: TextStyle(color: MiloColors.emerald, fontWeight: FontWeight.bold)),
+                                    Expanded(
+                                      child: Text(inc, style: GoogleFonts.inter(fontSize: 12, color: MiloColors.textSecondary)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ],
+                          if (event.inclusions.isNotEmpty && event.exclusions.isNotEmpty)
+                            const Divider(color: MiloColors.border, height: 18),
+                          if (event.exclusions.isNotEmpty) ...[
+                            Row(
+                              children: [
+                                const Icon(Icons.cancel_rounded, color: MiloColors.rose, size: 16),
+                                const SizedBox(width: 6),
+                                Text('NOT INCLUDED / RESTRICTIONS', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: MiloColors.rose)),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            ...event.exclusions.map((exc) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 6, bottom: 4),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('• ', style: TextStyle(color: MiloColors.rose, fontWeight: FontWeight.bold)),
+                                    Expanded(
+                                      child: Text(exc, style: GoogleFonts.inter(fontSize: 12, color: MiloColors.textSecondary)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                  ],
+
+                  // ── 4. INTERACTIVE FAQS ACCORDION ──
+                  if (event.faqs.isNotEmpty) ...[
+                    Text('Frequently Asked Questions ❓', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: MiloColors.textPrimary)),
+                    const SizedBox(height: 10),
+                    ...List.generate(event.faqs.length, (idx) {
+                      final item = event.faqs[idx];
+                      final isExpanded = _expandedFaqIndex == idx;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: MiloColors.bgSurface.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isExpanded ? MiloColors.primaryLight : MiloColors.glassBorder,
+                          ),
+                        ),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                          child: ExpansionTile(
+                            tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                            childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                            onExpansionChanged: (expanded) {
+                              setState(() {
+                                _expandedFaqIndex = expanded ? idx : null;
+                              });
+                            },
+                            title: Text(
+                              item['q'] ?? '',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: isExpanded ? MiloColors.primaryLight : MiloColors.textPrimary,
+                              ),
+                            ),
+                            children: [
+                              Text(
+                                item['a'] ?? '',
+                                style: GoogleFonts.inter(fontSize: 12, color: MiloColors.textSecondary, height: 1.4),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 20),
+                  ],
+
                   // Organizer Venue Rules & Custom Terms
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -1195,6 +1501,32 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMetaPill(String text, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: MiloColors.primaryLight),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

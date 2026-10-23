@@ -20,6 +20,67 @@ class MockData {
  isTrending: true,
  description:
  'Experience Lucknow’s most extravagant Dandiya & Garba Night with authentic Gujarati food stalls, high-energy live dhol, celebrity DJ beats, and massive prizes for best-dressed couple and solo dancers!',
+ language: 'Hindi, Gujarati, English',
+ duration: '5 Hours (6:00 PM - 11:00 PM)',
+ ageLimit: 'Family Friendly • 5 Yrs & Above',
+ landmarkAddress: 'Opp. Omaxe City Gate, Near Shaheed Path, Gomti Nagar Extension, Lucknow',
+ highlights: const [
+ 'High-energy Live Dhol Troupe & DJ EDM-Garba Fusion Beats',
+ 'Complimentary premium wooden Dandiya sticks provided at entrance',
+ 'Exciting cash prizes for Best Dressed Couple & Best Garba Performer',
+ 'Curated 20+ Gujarati & Lucknowi street food & refreshment stalls',
+ ],
+ inclusions: const [
+ 'Full venue access & lawn dance floor entry',
+ 'Free pair of decorated Dandiya sticks',
+ 'Complimentary welcome mocktail on entry',
+ 'Free secure two-wheeler & four-wheeler parking',
+ 'Access to interactive 360° photo booth',
+ ],
+ exclusions: const [
+ 'Food & beverage court items (paid individually inside)',
+ 'VIP lounge seating (reserved for VIP pass holders)',
+ 'Alcohol & smoking strictly prohibited on venue premises',
+ ],
+ performers: const [
+ {
+ 'name': 'DJ Shaan & Troupe',
+ 'role': 'Celebrity Bollywood & Garba DJ',
+ 'image': 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=300&q=80',
+ },
+ {
+ 'name': 'Nashik Dhol Beats',
+ 'role': 'Live Dhol & Percussion Band',
+ 'image': 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80',
+ },
+ {
+ 'name': 'RJ Priya',
+ 'role': 'Official Event Emcee & Host',
+ 'image': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+ },
+ ],
+ faqs: const [
+ {
+ 'q': 'Are Dandiya sticks provided or do we need to bring our own?',
+ 'a': 'A complimentary pair of wooden polished Dandiya sticks is provided at the welcome desk for all ticket holders.',
+ },
+ {
+ 'q': 'Is parking space available at Excellia / Sanskriti grounds?',
+ 'a': 'Yes, complimentary monitored parking for both two-wheelers and four-wheelers is available right adjacent to the gate.',
+ },
+ {
+ 'q': 'What is the dress code for this event?',
+ 'a': 'Traditional Indian wear (Chaniya Choli, Kurta Pajama, Kedia, Indo-Western) is highly recommended and eligible for stage awards.',
+ },
+ {
+ 'q': 'Is re-entry allowed if I step outside the venue gates?',
+ 'a': 'Re-entry requires a wristband re-scan at the gate. Please ensure your wristband is not detached.',
+ },
+ {
+ 'q': 'Are kids allowed and is there an entry fee?',
+ 'a': 'Children below 5 years enjoy free entry accompanied by parents. Kids 5 years and above require a valid pass.',
+ },
+ ],
  ticketTiers: const [
  TicketTier(
  id: 't1_1',

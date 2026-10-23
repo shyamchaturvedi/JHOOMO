@@ -20,6 +20,15 @@ class EventModel {
  final List<OrganizerCoupon> organizerCoupons;
  final String customTermsAndConditions;
  final bool autoReminder30Min;
+ final String language;
+ final String duration;
+ final String ageLimit;
+ final String landmarkAddress;
+ final List<String> highlights;
+ final List<String> inclusions;
+ final List<String> exclusions;
+ final List<Map<String, String>> performers;
+ final List<Map<String, String>> faqs;
 
  const EventModel({
  required this.id,
@@ -43,7 +52,18 @@ class EventModel {
  this.organizerCoupons = const [],
  this.customTermsAndConditions = '',
  this.autoReminder30Min = true,
+ this.language = 'Hindi, Gujarati, English',
+ this.duration = '4 Hours 30 Mins',
+ this.ageLimit = 'Family Friendly • 5+ Yrs',
+ this.landmarkAddress = '',
+ this.highlights = const [],
+ this.inclusions = const [],
+ this.exclusions = const [],
+ this.performers = const [],
+ this.faqs = const [],
  });
+
+ int get interestedCount => confirmedAttendeesCount * 4 + 350;
 
   int get confirmedAttendeesCount => (startingPrice * 0.4).toInt() + 120;
 }
