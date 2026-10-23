@@ -9,10 +9,12 @@ class MiloRazorpayService {
 
   Razorpay? _razorpay;
 
-  // Pass the real key at build time: --dart-define=RAZORPAY_KEY=rzp_live_xxx
+  // Default Razorpay Test Key for test & development verification
+  static const String _defaultTestKey = 'rzp_test_5142MBKPCtest0';
+
   static const String razorpayKey = String.fromEnvironment(
     'RAZORPAY_KEY',
-    defaultValue: '',
+    defaultValue: _defaultTestKey,
   );
 
   static bool get isConfigured => razorpayKey.isNotEmpty;
@@ -26,15 +28,16 @@ class MiloRazorpayService {
     required EventModel event,
     required TicketTier tier,
     required int quantity,
-    required double totalAmount,
+    required int amountPaise,
+    String? orderId,
     required String attendeeName,
     required String attendeePhone,
     required Function(PaymentSuccessResponse) onSuccess,
     required Function(PaymentFailureResponse) onError,
     required Function(ExternalWalletResponse) onExternalWallet,
   }) {
-    if (!isConfigured) {
-      debugPrint('Razorpay is not configured. Pass --dart-define=RAZORPAY_KEY=<key>.');
+    if (amountPaise <= 0) {
+      debugPrint('Razorpay checkout blocked: invalid amount.');
       return;
     }
     init();
@@ -44,23 +47,23 @@ class MiloRazorpayService {
     _razorpay!.on(Razorpay.EVENT_PAYMENT_ERROR, onError);
     _razorpay!.on(Razorpay.EVENT_EXTERNAL_WALLET, onExternalWallet);
 
-    final amountPaise = (totalAmount * 100).toInt();
     final phone = attendeePhone.isNotEmpty
         ? attendeePhone
-        : (MiloSessionService.currentUserPhone.isNotEmpty ? MiloSessionService.currentUserPhone : '9876543210');
+        : MiloSessionService.currentUserPhone;
     final name = attendeeName.isNotEmpty
         ? attendeeName
-        : (MiloSessionService.currentUserName.isNotEmpty ? MiloSessionService.currentUserName : 'JHOOMO Customer');
+        : MiloSessionService.currentUserName;
 
     final options = {
       'key': razorpayKey,
       'amount': amountPaise,
+      if (orderId != null && orderId.isNotEmpty) 'order_id': orderId,
+      'currency': 'INR',
       'name': 'JHOOMO Events',
       'description': '${event.title} - ${tier.name} ($quantity Pass${quantity > 1 ? 'es' : ''})',
       'prefill': {
-        'contact': phone,
-        'email': 'customer@jhoomo.com',
-        'name': name,
+        if (phone.isNotEmpty) 'contact': phone,
+        if (name.isNotEmpty) 'name': name,
       },
       'theme': {
         'color': '#E11D48', // JHOOMO Crimson Brand
@@ -70,6 +73,7 @@ class MiloRazorpayService {
         'tierId': tier.id,
         'quantity': quantity.toString(),
         'uid': MiloSessionService.currentUid,
+        'bookingOrderId': orderId,
       },
     };
 

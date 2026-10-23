@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
 import '../config.dart';
 import '../theme/milo_theme.dart';
@@ -35,10 +37,15 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   int? _expandedFaqIndex;
 
 
+  StreamSubscription<DocumentSnapshot>? _interestedSub;
+
   @override
   void initState() {
     super.initState();
     _interestedCount = widget.event.interestedCount;
+    _isFavorite = MiloWishlistService.instance.contains(widget.event.id);
+    _initLiveInterested();
+
     final deepLinkCode = widget.initialPromoCode?.trim().toUpperCase();
     if (deepLinkCode != null && deepLinkCode.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -46,6 +53,84 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         _applyPromoCode(deepLinkCode, (fn) => setState(fn));
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _interestedSub?.cancel();
+    super.dispose();
+  }
+
+  void _initLiveInterested() {
+    try {
+      final db = FirebaseFirestore.instance;
+      final docRef = db.collection('events').doc(widget.event.id);
+
+      // Listen to real-time live interested count from Firestore
+      _interestedSub = docRef.snapshots().listen((snap) {
+        if (!mounted || !snap.exists) return;
+        final data = snap.data();
+        if (data == null) return;
+        final list = List<String>.from(data['interested_uids'] ?? const []);
+        final customCount = (data['interested_count'] as num?)?.toInt();
+        final uid = MiloSessionService.currentUid;
+        setState(() {
+          if (uid.isNotEmpty) {
+            _isInterested = list.contains(uid);
+          }
+          if (customCount != null) {
+            _interestedCount = customCount;
+          } else if (list.isNotEmpty) {
+            _interestedCount = widget.event.interestedCount + list.length;
+          }
+        });
+      }, onError: (e) => debugPrint('Live interested stream note: $e'));
+    } catch (e) {
+      debugPrint('Firestore live interested init note: $e');
+    }
+  }
+
+  Future<void> _toggleLiveInterested() async {
+    final nextState = !_isInterested;
+    final diff = nextState ? 1 : -1;
+    setState(() {
+      _isInterested = nextState;
+      _interestedCount = (_interestedCount + diff).clamp(0, 999999);
+    });
+
+    try {
+      final uid = MiloSessionService.currentUid.isNotEmpty
+          ? MiloSessionService.currentUid
+          : 'guest_${DateTime.now().millisecondsSinceEpoch}';
+      final db = FirebaseFirestore.instance;
+      final docRef = db.collection('events').doc(widget.event.id);
+
+      await docRef.set({
+        'interested_count': _interestedCount,
+        'interested_uids': nextState
+            ? FieldValue.arrayUnion([uid])
+            : FieldValue.arrayRemove([uid]),
+        'last_voted_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Vote update error: $e');
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: MiloColors.bgSurface,
+        content: Text(
+          nextState
+              ? '👍 Your vote recorded! You are interested in this event.'
+              : 'Vote removed from interested.',
+          style: GoogleFonts.inter(
+            color: nextState ? MiloColors.amber : MiloColors.textSecondary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
   }
 
   final List<Map<String, String>> _datesList = [
@@ -524,7 +609,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   if (!mounted) return;
                   setState(() {
                     _isFavorite = added;
-                    _isInterested = added;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -665,46 +749,27 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                 ],
                               ),
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _isInterested = !_isInterested;
-                                    _interestedCount += _isInterested ? 1 : -1;
-                                  });
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: MiloColors.bgSurface,
-                                      content: Text(
-                                        _isInterested
-                                            ? 'Added to your Wishlist & Reminders! ⭐'
-                                            : 'Removed from interested.',
-                                        style: GoogleFonts.inter(
-                                          color: MiloColors.primaryLight,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
+                                onTap: _toggleLiveInterested,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                   decoration: BoxDecoration(
-                                    color: _isInterested ? MiloColors.primary : Colors.white.withValues(alpha: 0.15),
+                                    color: _isInterested ? MiloColors.amber : Colors.white.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(
                                     children: [
                                       Icon(
-                                        _isInterested ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                        color: Colors.white,
+                                        _isInterested ? Icons.thumb_up_alt_rounded : Icons.thumb_up_alt_outlined,
+                                        color: _isInterested ? Colors.black87 : Colors.white,
                                         size: 14,
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        _isInterested ? 'Interested ✓' : 'Interested',
+                                        _isInterested ? 'Voted ✓' : 'Interested',
                                         style: GoogleFonts.inter(
                                           fontSize: 11,
                                           fontWeight: FontWeight.w800,
-                                          color: Colors.white,
+                                          color: _isInterested ? Colors.black87 : Colors.white,
                                         ),
                                       ),
                                     ],
