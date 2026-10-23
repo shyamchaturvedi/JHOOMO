@@ -672,15 +672,24 @@ class _MiloBmsPaymentSheetState extends State<MiloBmsPaymentSheet> {
   ),
   ),
   ),
-  const SizedBox(height: 6),
-  Text(
-  'Or Quick Sandbox Payment:',
-  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: MiloColors.textMuted),
-  ),
-  const SizedBox(height: 6),
-  _buildInstantPaymentTile('Google Pay (Sandbox)', Icons.account_balance_wallet_rounded, const Color(0xFF4285F4)),
-  _buildInstantPaymentTile('PhonePe (Sandbox)', Icons.phone_android_rounded, const Color(0xFF5F259F)),
-  _buildInstantPaymentTile('Paytm / CRED UPI (Sandbox)', Icons.bolt_rounded, const Color(0xFF00B9F5)),
+  if (kDebugMode) ...[
+    const SizedBox(height: 10),
+    Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: MiloColors.amber.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        'DEBUG / SANDBOX MODE ONLY',
+        style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: MiloColors.amber),
+      ),
+    ),
+    const SizedBox(height: 6),
+    _buildInstantPaymentTile('Google Pay (Sandbox)', Icons.account_balance_wallet_rounded, const Color(0xFF4285F4)),
+    _buildInstantPaymentTile('PhonePe (Sandbox)', Icons.phone_android_rounded, const Color(0xFF5F259F)),
+    _buildInstantPaymentTile('Paytm / CRED UPI (Sandbox)', Icons.bolt_rounded, const Color(0xFF00B9F5)),
+  ],
  ] else if (_selectedMode == PaymentMode.directUpi) ...[
  Container(
  padding: const EdgeInsets.all(14),
