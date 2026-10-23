@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- White Porcelain Gloss Gradients & Highlights -->
+    <linearGradient id="bodyGloss" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="60%" stop-color="#F8FAFC" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+
+    <linearGradient id="bevelLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#CBD5E1" stop-opacity="0.2" />
+    </linearGradient>
+
+    <!-- 3D Drop Shadow on transparent background -->
+    <filter id="softShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="3" dy="12" stdDeviation="10" flood-color="#701A75" flood-opacity="0.32" />
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.18" />
+    </filter>
+
+    <filter id="headShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="7" stdDeviation="6" flood-color="#701A75" flood-opacity="0.28" />
+    </filter>
+
+    <!-- Inner Bevel Simulation -->
+    <filter id="innerBevel" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowDiff" />
+      <feFlood flood-color="#94A3B8" flood-opacity="0.3" />
+      <feComposite in2="shadowDiff" operator="in" />
+      <feComposite in2="SourceGraphic" operator="over" />
+    </filter>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <!-- 1. The Bold Stylized 'J' Letter Stem and Bottom Hook -->
+    <!-- Top arm / bar of the J -->
+    <path d="M 230 115 
+             L 265 115 
+             C 268 115, 270 118, 270 122 
+             L 266 185 
+             C 255 178, 240 172, 230 168 
+             Z" 
+          fill="url(#bodyGloss)" stroke="#E2E8F0" stroke-width="1.5" />
+
+    <!-- Main Vertical Column and Curved J Bowl -->
+    <path d="M 224 140
+             C 224 135, 222 130, 218 130
+             L 216 130
+             L 216 335
+             C 216 370, 185 390, 145 390
+             C 120 390, 105 375, 115 352
+             C 122 338, 142 344, 158 344
+             C 178 344, 188 335, 188 312
+             L 188 152
+             C 188 142, 196 135, 206 135
+             L 224 140 Z"
+          fill="url(#bodyGloss)" stroke="#E2E8F0" stroke-width="1.5" />
+
+    <!-- Smooth J Contour 3D Body Merge -->
+    <path d="M 218 132
+             L 262 132
+             C 264 132, 265 134, 265 137
+             L 265 305
+             C 265 350, 230 392, 172 392
+             C 134 392, 110 368, 114 340
+             C 118 322, 140 326, 155 332
+             C 182 342, 216 336, 216 295
+             L 216 142
+             C 216 136, 217 132, 218 132 Z"
+          fill="url(#bodyGloss)" stroke="#CBD5E1" stroke-width="1" />
+
+    <!-- 2. The Celebratory Dancing Figure (Jhoomo Spirit) -->
+    
+    <!-- Dancing Figure: Head -->
+    <ellipse cx="298" cy="148" rx="22" ry="24" transform="rotate(-15 298 148)"
+             fill="url(#bodyGloss)" stroke="#E2E8F0" stroke-width="1.5" filter="url(#headShadow)" />
+    <!-- Head highlight -->
+    <ellipse cx="293" cy="142" rx="14" ry="15" fill="#FFFFFF" opacity="0.75" />
+
+    <!-- Left Raised Celebratory Arm (Merging onto J stem) -->
+    <path d="M 222 142
+             C 226 150, 245 190, 266 212
+             C 272 205, 277 195, 273 182
+             C 262 165, 240 142, 226 136
+             C 223 135, 221 138, 222 142 Z"
+          fill="url(#bodyGloss)" stroke="#E2E8F0" stroke-width="1" />
+
+    <!-- Right Raised Celebratory Arm (Reaching high & outward) -->
+    <path d="M 302 184
+             C 318 170, 348 135, 365 102
+             C 367 98, 364 96, 360 99
+             C 345 116, 318 160, 292 195
+             Z"
+          fill="url(#bodyGloss)" stroke="#E2E8F0" stroke-width="1" />
+
+    <!-- Dynamic Dancing Torso & Flowing Spine -->
+    <path d="M 275 195
+             C 292 195, 310 215, 314 240
+             C 320 270, 305 295, 315 320
+             C 328 350, 350 375, 365 398
+             C 368 403, 360 405, 355 401
+             C 335 380, 315 352, 302 320
+             C 290 292, 298 268, 288 245
+             C 280 228, 268 215, 255 210
+             L 275 195 Z"
+          fill="url(#bodyGloss)" stroke="#E2E8F0" stroke-width="1.5" />
+
+    <!-- Left Energetic Kick Leg (Angled forward) -->
+    <path d="M 275 272
+             C 268 290, 245 340, 230 385
+             C 229 388, 234 388, 238 384
+             C 255 358, 280 310, 292 280
+             Z"
+          fill="url(#bodyGloss)" stroke="#E2E8F0" stroke-width="1.2" />
+
+    <!-- Left Torso dynamic wedge connecting into the 'J' -->
+    <path d="M 270 235
+             L 245 285
+             C 243 289, 249 292, 253 288
+             L 282 248
+             Z"
+          fill="url(#bodyGloss)" opacity="0.95" />
+  </g>
+
+  <!-- Specular 3D Highlights on edges for glossy white ceramic effect -->
+  <path d="M 218 140 L 218 310" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8" />
+  <path d="M 148 375 C 170 378, 198 368, 210 345" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.6" />
+</svg>

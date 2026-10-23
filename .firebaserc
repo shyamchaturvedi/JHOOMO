@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "milo-da65c",
+    "staging": "milo-da65c-staging"
+  }
+}

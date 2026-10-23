@@ -1,0 +1,323 @@
+{
+  "indexes": [
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "cityId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "cityId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "trendScore", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "cityId", "order": "ASCENDING" },
+      { "fieldPath": "categoryId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "searchKeywords", "arrayConfig": "CONTAINS" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "organizerId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "cityId", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "categoryId", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "ageLimit", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "cityId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "minPricePaise", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "banners", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "cityIds", "arrayConfig": "CONTAINS" },
+      { "fieldPath": "active", "order": "ASCENDING" },
+      { "fieldPath": "priority", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "bookings", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "bookings", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "eventId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "bookings", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "tickets", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "eventStartAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "tickets", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "bookingId", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "chats", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "participants", "arrayConfig": "CONTAINS" },
+      { "fieldPath": "lastMessageAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "connections", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "toUid", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "connections", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "fromUid", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "beacons", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "eventId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "meetAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "commissions", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "promoterId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "settlements", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "organizerId", "order": "ASCENDING" },
+      { "fieldPath": "scheduledFor", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "settlements", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "scheduledFor", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "refunds", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "organizers", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "kycStatus", "order": "ASCENDING" },
+      { "fieldPath": "updatedAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "staff", "queryScope": "COLLECTION_GROUP", "fields": [
+      { "fieldPath": "phone", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "sosAlerts", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "organizerId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "startedAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "reports", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "supportTickets", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "slaDueAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "supportTickets", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "promoterPayouts", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "promoterId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "requestedAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "notifications", "queryScope": "COLLECTION_GROUP", "fields": [
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "soldPct", "order": "DESCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "trendScore", "order": "DESCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "organizerId", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "searchKeywords", "arrayConfig": "CONTAINS" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "cityId", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "bookings", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "idempotencyKey", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "bookings", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "eventId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "bookings", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "promo.code", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "bookings", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "reservationExpiresAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "commissions", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "eventId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "gateSessions", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "eventId", "order": "ASCENDING" },
+      { "fieldPath": "staffId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "sosAlerts", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "eventId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "reports", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "reportedUserId", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "chats", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "eventId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "users", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "deletionScheduledAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "chats", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "type", "order": "ASCENDING" },
+      { "fieldPath": "eventId", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "settlements", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "organizerId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "scheduledFor", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "supportTickets", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "lastMessageAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "orders", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "settlementDate", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "reports", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "refunds", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "adminAuditLogs", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "action", "order": "ASCENDING" },
+      { "fieldPath": "at", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "adminAuditLogs", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "targetType", "order": "ASCENDING" },
+      { "fieldPath": "at", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "notifications", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "readAt", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "cityId", "order": "ASCENDING" },
+      { "fieldPath": "categoryId", "order": "ASCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "cityId", "order": "ASCENDING" },
+      { "fieldPath": "soldPct", "order": "DESCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "cityId", "order": "ASCENDING" },
+      { "fieldPath": "trendScore", "order": "DESCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "categoryId", "order": "ASCENDING" },
+      { "fieldPath": "soldPct", "order": "DESCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "categoryId", "order": "ASCENDING" },
+      { "fieldPath": "trendScore", "order": "DESCENDING" },
+      { "fieldPath": "schedule.startAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "supportTickets", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "eventId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "beacons", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "creatorId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "chats", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "participants", "arrayConfig": "CONTAINS" },
+      { "fieldPath": "type", "order": "ASCENDING" },
+      { "fieldPath": "lastMessageAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "chats", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "type", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "settlements", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "scheduledFor", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "organizers", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "kycStatus", "order": "ASCENDING" },
+      { "fieldPath": "updatedAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "updatedAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "fraudFlags", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "adminAuditLogs", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "action", "order": "ASCENDING" },
+      { "fieldPath": "targetType", "order": "ASCENDING" },
+      { "fieldPath": "at", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "emergencyContactTokens", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "uid", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" }
+    ]}
+  ],
+  "fieldOverrides": []
+}

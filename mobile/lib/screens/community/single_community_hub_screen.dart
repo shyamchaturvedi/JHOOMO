@@ -574,10 +574,15 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Events Community',
-                  style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900, color: MiloColors.textPrimary),
+                Flexible(
+                  child: Text(
+                    'Events Community',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900, color: MiloColors.textPrimary),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Container(
@@ -586,7 +591,7 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
                     gradient: MiloGradients.primaryBrand,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Text('OPEN SOURCE', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w900, color: MiloColors.bg)),
+                  child: Text('HUB', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w900, color: MiloColors.bg)),
                 ),
               ],
             ),
@@ -726,6 +731,7 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
                                 Row(
                                   children: [
                                     Flexible(
+                                      flex: 5,
                                       child: Text(
                                         post.authorName,
                                         style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
@@ -733,16 +739,21 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
                                       ),
                                     ),
                                     const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: roleColor.withValues(alpha: 0.16),
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: roleColor.withValues(alpha: 0.5), width: 0.9),
-                                      ),
-                                      child: Text(
-                                        post.roleBadge,
-                                        style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: roleColor),
+                                    Flexible(
+                                      flex: 4,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: roleColor.withValues(alpha: 0.16),
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: roleColor.withValues(alpha: 0.5), width: 0.9),
+                                        ),
+                                        child: Text(
+                                          post.roleBadge,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: roleColor),
+                                        ),
                                       ),
                                     ),
                                   ],

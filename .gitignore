@@ -1,0 +1,23 @@
+# Node dependencies
+node_modules/
+package-lock.json
+
+# Scratch files
+scratch_*.js
+patch_*.js
+
+# Mobile Flutter build & cache
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/.idea/
+mobile/*.iml
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/build/
+
+# Miscellaneous
+.DS_Store
+Thumbs.db

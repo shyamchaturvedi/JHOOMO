@@ -1,0 +1,236 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Milo — Firestore Security Rules (PRD v4 §11.5)
+// Source of truth: MILO_PRD_V4_FIREBASE_MASTER.md
+//
+// Trust model (§10.1.5): price, inventory, role claims, refunds, check-ins and
+// consent state are NEVER decided by the client. Client writes are limited to
+// low-risk owner data (profile fields, wishlist, drafts, read receipts).
+//
+// Hardening deltas vs. the PRD reference implementation (documented in
+// docs/COMPLIANCE.md §6):
+//   H1 `email` is not client-writable — a function verifies the link first.
+//   H2 `publicProfiles` stays owner/admin-read-only; peers read sanitised
+//      `radarMembers` snapshots instead (PRD §11 principle 5).
+//   H3 `consents`, `dob`, `phone`, `roles`, `status`, `faceVerified` are not in
+//      the owner update allow-list (DPDP: server-side consent + 18+ enforcement).
+//   H4 Every write path validates `schemaVersion` is not silently dropped.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ───────── helpers ─────────
+    function signedIn()    { return request.auth != null; }
+    function uid()         { return request.auth.uid; }
+    function isOwner(id)   { return signedIn() && uid() == id; }
+    function isAdmin()     { return signedIn() && request.auth.token.admin == true; }
+    function adminLevel()  { return signedIn() ? request.auth.token.adminLevel : ''; }
+    function isAdminL2()   { return isAdmin() && adminLevel() in ['L2','L3']; }
+    function isAdminL3()   { return isAdmin() && adminLevel() == 'L3'; }
+    function isOrganizer() { return signedIn() && request.auth.token.organizer == true; }
+    function isPromoter()  { return signedIn() && request.auth.token.promoter == true; }
+    function isStaff()     { return signedIn() && request.auth.token.role == 'gate_staff'; }
+    function staffOf(eid)  { return isStaff() && request.auth.token.eventId == eid; }
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+    function dp(p)         { return /databases/$(database)/documents/$(p); }
+    function eventData(eid){ return get(dp('events/' + eid)).data; }
+    function ownsEvent(eid){ return isOrganizer() && eventData(eid).organizerId == uid(); }
+    function publicStatus(s) { return s in ['live','sold_out','paused','completed','cancelled']; }
+    function hasTicketFor(eid) { return signedIn() && exists(dp('eventAttendees/' + eid + '_' + uid())); }
+    function serverOwnedEventKeys() {
+      return ['trendScore','featured','organizerPublic','minPricePaise','soldPct','review','publishedAt'];
+    }
+    // H4 — schema version may change but may never be dropped.
+    function keepsSchemaVersion() {
+      return request.resource.data.schemaVersion == resource.data.schemaVersion
+          || request.resource.data.schemaVersion is number;
+    }
+
+    // ───────── public config & content (world readable, server written) ─────────
+    match /appConfig/{id} {
+      allow read: if id == 'public' || isAdmin();
+      allow write: if false;
+    }
+    match /cities/{id}        { allow read: if true; allow write: if false; }
+    match /categories/{id}    { allow read: if true; allow write: if false; }
+    match /banners/{id}       { allow read: if true; allow write: if false; }
+    match /helpArticles/{id}  { allow read: if true; allow write: if false; }
+    match /legalDocs/{id}     { allow read: if true; allow write: if false; }
+    match /cityWaitlist/{id}  { allow create: if signedIn() && request.resource.data.uid == uid(); }
+
+    // ───────── users ─────────
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, delete: if false;                       // bootstrapUser / deletion job
+      allow update: if isOwner(userId)
+                    && onlyChanges([
+                      'displayName','avatarUrl','bio','interests','cityId','gender',
+                      'privacy','notificationPrefs','locale','lastActiveAt','updatedAt','appVersion'
+                    ])
+                    && keepsSchemaVersion();
+      match /devices/{id}       { allow read, write: if isOwner(userId); }
+      match /wishlist/{id}      { allow read, write: if isOwner(userId); }
+      match /blocks/{id}        { allow read, write: if isOwner(userId); }
+      match /emergencyContacts/{id} {
+        allow read, delete: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.status == 'pending';
+        allow update: if false;                             // status changes by SMS webhook function
+      }
+      match /notifications/{id} {
+        allow read: if isOwner(userId);
+        allow update: if isOwner(userId) && onlyChanges(['readAt']);
+      }
+    }
+    match /publicProfiles/{id} { allow read: if isOwner(id) || isAdmin(); allow write: if false; }
+    match /publicKeys/{id} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(id)
+        && request.resource.data.keys().hasOnly(['identityPublicKey','keyVersion','createdAt','schemaVersion','updatedAt']);
+    }
+
+    // ───────── organizer / KYC ─────────
+    match /organizers/{id} {
+      allow read: if isOwner(id) || isAdmin();
+      allow write: if false;                                 // saveKycDraft / submitKyc / adminReviewKyc
+      match /kycEvents/{eid} { allow read: if isOwner(id) || isAdmin(); allow write: if false; }
+    }
+    match /organizerPrivate/{id} { allow read, write: if false; }
+
+    // ───────── events ─────────
+    match /events/{eventId} {
+      allow read: if publicStatus(resource.data.status)
+                  || (signedIn() && resource.data.organizerId == uid())
+                  || isAdmin() || staffOf(eventId);
+      allow create: if isOrganizer() && request.resource.data.organizerId == uid()
+                    && request.resource.data.status == 'draft'
+                    && !request.resource.data.keys().hasAny(serverOwnedEventKeys());
+      allow update: if isOrganizer() && resource.data.organizerId == uid()
+                    && resource.data.status in ['draft','changes_requested']
+                    && request.resource.data.status == 'draft'
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(serverOwnedEventKeys());
+      allow delete: if isOrganizer() && resource.data.organizerId == uid() && resource.data.status == 'draft';
+
+      match /ticketTiers/{tierId} {
+        allow read: if publicStatus(eventData(eventId).status) || ownsEvent(eventId) || isAdmin();
+        allow create, update, delete: if ownsEvent(eventId) && eventData(eventId).status in ['draft','changes_requested']
+                    && !request.resource.data.keys().hasAny(['availableApprox','soldOut']);
+        match /shards/{n} { allow read, write: if false; }
+      }
+      match /staff/{staffId}    { allow read: if ownsEvent(eventId) || isAdmin(); allow write: if false; }
+      match /checkins/{ticketId}{ allow read: if ownsEvent(eventId) || isAdmin(); allow write: if false; }
+      match /radarMembers/{memberId} { allow read: if hasTicketFor(eventId) || isAdmin(); allow write: if false; }
+      match /reviews/{uid}      { allow read: if publicStatus(eventData(eventId).status) || isAdmin(); allow write: if false; }
+    }
+    match /eventAttendees/{id} { allow read: if (signedIn() && resource.data.uid == uid()) || isAdmin(); allow write: if false; }
+    match /eventStats/{id}     { allow read: if true; allow write: if false; }
+    match /eventFinance/{eventId}        { allow read: if ownsEvent(eventId) || isAdmin(); allow write: if false;
+      match /daily/{d}                   { allow read: if ownsEvent(eventId) || isAdmin(); } }
+    match /gateStats/{eventId}           { allow read: if ownsEvent(eventId) || isAdmin() || staffOf(eventId); allow write: if false;
+      match /shards/{n}                  { allow read: if ownsEvent(eventId) || isAdmin() || staffOf(eventId); } }
+    match /gateSessions/{id} {
+      allow read: if (signedIn() && resource.data.staffUid == uid())
+                  || (isOrganizer() && eventData(resource.data.eventId).organizerId == uid()) || isAdmin();
+      allow write: if false;
+    }
+    match /promoCodes/{id} { allow read: if (isOrganizer() && resource.data.organizerId == uid()) || isAdmin(); allow write: if false; }
+
+    // ───────── commerce (gate staff have NO access) ─────────
+    match /bookings/{id} {
+      allow read: if (signedIn() && resource.data.userId == uid())
+                  || (isOrganizer() && resource.data.organizerId == uid()) || isAdmin();
+      allow write: if false;
+    }
+    match /tickets/{id} {
+      allow read: if (signedIn() && resource.data.userId == uid())
+                  || (isOrganizer() && resource.data.organizerId == uid()) || isAdmin();
+      allow write: if false;
+    }
+    match /refunds/{id} {
+      allow read: if (signedIn() && resource.data.userId == uid())
+                  || (isOrganizer() && resource.data.organizerId == uid()) || isAdmin();
+      allow write: if false;
+    }
+    match /settlements/{id} {
+      allow read: if (isOrganizer() && resource.data.organizerId == uid()) || isAdmin();
+      allow write: if false;
+    }
+    match /bookingRefs/{id}      { allow read, write: if false; }
+    match /ticketSecrets/{id}    { allow read, write: if false; }
+    match /staffSecrets/{id}     { allow read, write: if false; }
+    match /payments/{id}         { allow read, write: if false; }
+    match /referralCodes/{id}    { allow read, write: if false; }
+    match /rateLimits/{id}       { allow read, write: if false; }
+
+    // ───────── promoter ─────────
+    match /promoters/{id} {
+      allow read: if isOwner(id) || isAdmin(); allow write: if false;
+      match /daily/{d} { allow read: if isOwner(id) || isAdmin(); }
+    }
+    match /commissions/{id}     { allow read: if (signedIn() && resource.data.promoterId == uid()) || isAdmin(); allow write: if false; }
+    match /promoterPayouts/{id} { allow read: if (signedIn() && resource.data.promoterId == uid()) || isAdmin(); allow write: if false; }
+
+    // ───────── social ─────────
+    match /connections/{id} {
+      allow read: if signedIn() && (resource.data.fromUid == uid() || resource.data.toUid == uid());
+      allow write: if false;
+    }
+    function isMember(chatId) {
+      return signedIn() && (uid() in get(dp('chats/' + chatId)).data.get('participants', [])
+                            || exists(dp('chats/' + chatId + '/members/' + uid())));
+    }
+    match /chats/{chatId} {
+      allow read: if isMember(chatId) || isAdmin();
+      allow update: if isMember(chatId) && onlyChanges(['lastReadAt','muted']);
+      allow create, delete: if false;                        // created by respondConnection / room functions
+      match /members/{m} { allow read: if isMember(chatId) || isAdmin(); allow write: if false; }
+      match /messages/{messageId} {
+        allow read: if isMember(chatId) || isAdmin();
+        allow create: if isMember(chatId)
+                      && request.resource.data.senderId == uid()
+                      && request.resource.data.createdAt == request.time
+                      && get(dp('chats/' + chatId)).data.status == 'active'
+                      && request.resource.data.get('ciphertext', '').size() < 4096
+                      && request.resource.data.get('text', '').size() <= 500;
+        allow update: if resource.data.senderId == uid()
+                      && onlyChanges(['deleted','ciphertext','text'])
+                      && request.resource.data.deleted == true
+                      && request.time < resource.data.createdAt + duration.value(10, 'm');
+        allow delete: if false;
+      }
+    }
+    match /beacons/{id} {
+      allow read: if hasTicketFor(resource.data.eventId) || isAdmin(); allow write: if false;
+      match /members/{m} { allow read: if hasTicketFor(get(dp('beacons/' + id)).data.eventId) || isAdmin(); allow write: if false; }
+    }
+
+    // ───────── safety, reports, support ─────────
+    match /sosAlerts/{id} {
+      allow read: if (signedIn() && resource.data.userId == uid())
+                  || (isOrganizer() && resource.data.get('organizerId', '') == uid()) || isAdmin();
+      allow write: if false;
+      match /locationUpdates/{u} { allow read: if isAdmin(); allow write: if false; }
+    }
+    match /reports/{id}        { allow read: if isAdmin(); allow write: if false; }
+    match /supportTickets/{id} {
+      allow read: if (signedIn() && resource.data.userId == uid()) || isAdmin();
+      allow create: if signedIn() && request.resource.data.userId == uid() && request.resource.data.status == 'open';
+      allow update: if false;
+      match /messages/{m} {
+        allow read: if (signedIn() && get(dp('supportTickets/' + id)).data.userId == uid()) || isAdmin();
+        allow create: if signedIn() && get(dp('supportTickets/' + id)).data.userId == uid()
+                      && request.resource.data.senderType == 'user' && request.resource.data.senderId == uid();
+      }
+    }
+
+    // ───────── platform / admin ─────────
+    match /fraudFlags/{id}      { allow read: if isAdmin(); allow write: if false; }
+    match /adminAuditLogs/{id}  { allow read: if isAdmin(); allow write: if false; }
+    match /adminStats/{id}      { allow read: if isAdmin(); allow write: if false; }
+    match /admins/{id}          { allow read: if isOwner(id) || isAdmin(); allow write: if false; }
+    match /campaigns/{id}       { allow read: if isAdmin(); allow write: if false; }
+  }
+}

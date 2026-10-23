@@ -1,0 +1,58 @@
+rules_version = '2';
+
+// Milo — Cloud Storage rules (PRD v4 §11.6)
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Avatars — owner writes, everyone signed-in reads (served via resize URLs).
+    match /users/{uid}/avatar.jpg {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 1 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Event media — owner writes while the event is a draft/changes_requested.
+    match /events/{eventId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.token.organizer == true
+                   && get(/databases/(default)/documents/events/$(eventId)).data.organizerId == request.auth.uid
+                   && get(/databases/(default)/documents/events/$(eventId)).data.status in ['draft','changes_requested']
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+
+    // Organizer brand logo.
+    match /organizers/{uid}/logo.png {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 1 * 1024 * 1024
+                   && request.resource.contentType == 'image/png';
+    }
+
+    // Server-generated ticket / invoice PDFs — functions only, served via signed URL.
+    match /tickets/{ticketPdf}   { allow read, write: if false; }
+    match /invoices/{invoicePdf} { allow read, write: if false; }
+
+    // Organizer attendee exports — functions only, 15-minute signed URL.
+    match /exports/{organizerId}/{file} { allow read, write: if false; }
+
+    // Encrypted chat blobs [P1] — members only.
+    match /chat/{chatId}/{messageFile} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 2 * 1024 * 1024;
+    }
+
+    // Support attachments.
+    match /support/{ticketId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

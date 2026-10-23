@@ -147,7 +147,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         const SizedBox(height: 18),
                         // Event & Tier Header
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Expanded(
                               child: Column(
@@ -155,7 +155,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                 children: [
                                   Text(
                                     widget.event.title,
-                                    style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
+                                    style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -163,20 +163,27 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                   Text(
                                     '${widget.event.venue} • $_selectedDateIndex',
                                     style: GoogleFonts.inter(color: MiloColors.textSecondary, fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: MiloColors.primary.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: MiloColors.primaryLight.withValues(alpha: 0.5)),
-                              ),
-                              child: Text(
-                                tier.name,
-                                style: GoogleFonts.inter(color: MiloColors.primaryLight, fontSize: 11, fontWeight: FontWeight.w800),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: MiloColors.primary.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: MiloColors.primaryLight.withValues(alpha: 0.5)),
+                                ),
+                                child: Text(
+                                  tier.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(color: MiloColors.primaryLight, fontSize: 11, fontWeight: FontWeight.w800),
+                                ),
                               ),
                             ),
                           ],
@@ -199,6 +206,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                 child: Text(
                                   'High demand! 18 people looking at this pass right now.',
                                   style: GoogleFonts.inter(color: MiloColors.amber, fontSize: 11, fontWeight: FontWeight.w700),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -210,13 +219,21 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Select Passes', style: GoogleFonts.inter(color: MiloColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
-                                Text('Instant digital M-Ticket on app', style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11)),
-                              ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Select Passes', style: GoogleFonts.inter(color: MiloColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
+                                  Text(
+                                    'Instant digital M-Ticket on app',
+                                    style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             Container(
                               decoration: BoxDecoration(
                                 color: MiloColors.bgCard,
@@ -264,9 +281,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                               children: [
                                 const Icon(Icons.group_rounded, color: MiloColors.emerald, size: 16),
                                 const SizedBox(width: 8),
-                                Text(
-                                  'Squad Bonus: 10% OFF applied for 3+ passes! 🎉',
-                                  style: GoogleFonts.inter(color: MiloColors.emerald, fontSize: 11, fontWeight: FontWeight.w700),
+                                Expanded(
+                                  child: Text(
+                                    'Squad Bonus: 10% OFF applied for 3+ passes! 🎉',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.inter(color: MiloColors.emerald, fontSize: 11, fontWeight: FontWeight.w700),
+                                  ),
                                 ),
                               ],
                             ),
@@ -418,9 +439,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                               children: [
                                 const Icon(Icons.bolt_rounded, color: MiloColors.textPrimary, size: 22),
                                 const SizedBox(width: 8),
-                                Text(
-                                  'Proceed to Book Passes • ₹${total.toStringAsFixed(0)}',
-                                  style: GoogleFonts.inter(fontWeight: FontWeight.w900, color: MiloColors.textPrimary, fontSize: 14),
+                                Flexible(
+                                  child: Text(
+                                    'Proceed to Book Passes • ₹${total.toStringAsFixed(0)}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.inter(fontWeight: FontWeight.w900, color: MiloColors.textPrimary, fontSize: 14),
+                                  ),
                                 ),
                               ],
                             ),
@@ -662,23 +687,33 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundColor: MiloColors.bgCard,
-                            child: const Icon(Icons.verified, color: MiloColors.primaryLight, size: 20),
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(event.organizerName, style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: MiloColors.textPrimary, fontSize: 14)),
-                              Text('Verified Host • 4.9 ★ Host Rating', style: GoogleFonts.inter(color: MiloColors.emerald, fontSize: 11)),
-                            ],
-                          ),
-                        ],
+                      Expanded(
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor: MiloColors.bgCard,
+                              child: const Icon(Icons.verified, color: MiloColors.primaryLight, size: 20),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    event.organizerName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: MiloColors.textPrimary, fontSize: 14),
+                                  ),
+                                  Text('Verified Host • 4.9 ★ Host Rating', style: GoogleFonts.inter(color: MiloColors.emerald, fontSize: 11)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(

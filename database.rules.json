@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "presence": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth.uid === $uid"
+      }
+    },
+    "typing": {
+      "$chatId": {
+        "$uid": {
+          ".read": "auth != null",
+          ".write": "auth.uid === $uid",
+          ".validate": "newData.hasChildren(['at'])"
+        }
+      }
+    }
+  }
+}

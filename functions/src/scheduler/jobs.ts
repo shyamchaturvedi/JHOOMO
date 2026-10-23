@@ -1,0 +1,302 @@
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { logger } from 'firebase-functions';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { db, authAdmin } from '../shared/admin';
+import { releaseInventory } from '../booking/inventory';
+import { notifyUser } from '../shared/notify';
+import { istDateKey } from '../shared/time';
+
+/**
+ * Releases inventory held by abandoned checkouts (§13.3 `expireReservations`).
+ * Runs every minute so a held seat never blocks another buyer for long.
+ */
+export const expireReservations = onSchedule(
+  { schedule: 'every 1 minutes', region: 'asia-south1', maxInstances: 1 },
+  async () => {
+    const now = Timestamp.now();
+    const stale = await db()
+      .collection('bookings')
+      .where('status', '==', 'pending_payment')
+      .where('reservationExpiresAt', '<=', now)
+      .limit(200)
+      .get();
+
+    let expired = 0;
+    for (const doc of stale.docs) {
+      const booking = doc.data();
+      const updated = await db()
+        .collection('bookings')
+        .doc(doc.id)
+        .update({
+          status: 'expired',
+          updatedAt: FieldValue.serverTimestamp(),
+        })
+        .then(() => true)
+        .catch(() => false);
+      if (!updated) continue;
+
+      const allocations = (booking.reservation?.shards ?? []) as Array<{
+        tierId: string;
+        shard: string;
+        qty: number;
+      }>;
+      await releaseInventory(String(booking.eventId), allocations).catch(() => undefined);
+      expired += 1;
+    }
+
+    if (expired > 0) logger.info('expireReservations.complete', { expired });
+  },
+);
+
+/**
+ * Sends the 24-hour and 2-hour event reminders (§14). Reminders are marked on
+ * the ticket so a rescheduled run never double-sends.
+ */
+export const eventReminders = onSchedule(
+  { schedule: 'every 15 minutes', region: 'asia-south1', maxInstances: 1 },
+  async () => {
+    const now = new Date();
+    const todayKey = istDateKey(now);
+    const windows = [
+      { hours: 24, id: 'event_reminder_24h' },
+      { hours: 2, id: 'event_reminder_2h' },
+    ];
+
+    for (const window of windows) {
+      const events = await db()
+        .collection('events')
+        .where('status', 'in', ['live', 'sold_out'])
+        .get();
+
+      for (const eventDoc of events.docs) {
+        const event = eventDoc.data();
+        const startAt = event.schedule?.startAt as Timestamp | undefined;
+        if (!startAt) continue;
+
+        const deltaHours = (startAt.toMillis() - now.getTime()) / (60 * 60 * 1000);
+        if (deltaHours <= 0 || deltaHours > window.hours) continue;
+
+        const key = `${eventDoc.id}_${todayKey}_${window.hours}`;
+        const marker = db().collection('notificationMarkers').doc(key);
+        const markerSnap = await marker.get();
+        if (markerSnap.exists) continue;
+
+        const attendees = await db().collection('eventAttendees').where('eventId', '==', eventDoc.id).get();
+        for (const attendee of attendees.docs) {
+          const uid = String(attendee.data().uid);
+          await notifyUser(
+            uid,
+            window.id,
+            window.hours === 24 ? 'Starting tomorrow' : 'Starting soon',
+            `"${event.title}" starts in ${window.hours} hours. Open your ticket for the QR.`,
+            { deepLink: `/event/${eventDoc.id}`, channel: 'reminders' },
+          ).catch(() => undefined);
+        }
+
+        await marker.set({ sentAt: FieldValue.serverTimestamp(), count: attendees.size }, { merge: true });
+      }
+    }
+  },
+);
+
+/**
+ * Ranks events for the Trending rail using sales velocity, wishlist pressure
+ * and recency (§13.3 `computeTrendScore`).
+ */
+export const computeTrendScore = onSchedule(
+  { schedule: 'every 1 hours', region: 'asia-south1', maxInstances: 1 },
+  async () => {
+    const now = Date.now();
+    const events = await db()
+      .collection('events')
+      .where('status', 'in', ['live', 'sold_out'])
+      .limit(300)
+      .get();
+
+    for (const doc of events.docs) {
+      const event = doc.data();
+      const soldPct = Number(event.soldPct ?? 0);
+      const startAt = (event.schedule?.startAt as Timestamp | undefined)?.toMillis() ?? now;
+      const daysOut = Math.max(0, (startAt - now) / 86_400_000);
+
+      const statsSnap = await db().collection('eventStats').doc(doc.id).get();
+      const wishlistCount = Number(statsSnap.data()?.wishlistCount ?? 0);
+      const radarCount = Number(statsSnap.data()?.radarCount ?? 0);
+
+      const velocity = soldPct / Math.max(0.5, daysOut);
+      const wishlistPressure = Math.min(40, wishlistCount * 2);
+      const radarPressure = Math.min(20, radarCount);
+      const recency = Math.max(0, 30 - daysOut);
+      const score = Math.round(velocity * 12 + wishlistPressure + radarPressure + recency);
+
+      if (Number(event.trendScore ?? 0) === score) continue;
+      await doc.ref.set({ trendScore: score, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    }
+
+    logger.info('computeTrendScore.complete', { scanned: events.size });
+  },
+);
+
+/**
+ * Executes account deletions after the 30-day grace period (§13.3
+ * `accountDeletionJob`). PII is erased; financial records are retained for the
+ * statutory period (8 years, OPEN-10).
+ */
+export const accountDeletionJob = onSchedule(
+  { schedule: 'every day 03:00', timeZone: 'Asia/Kolkata', region: 'asia-south1', maxInstances: 1 },
+  async () => {
+    const now = Timestamp.now();
+    const pending = await db()
+      .collection('users')
+      .where('status', '==', 'deletion_pending')
+      .where('deletionScheduledAt', '<=', now)
+      .limit(50)
+      .get();
+
+    for (const doc of pending.docs) {
+      const uid = doc.id;
+      try {
+        await db()
+          .collection('users')
+          .doc(uid)
+          .set(
+            {
+              status: 'deleted',
+              displayName: 'Deleted user',
+              avatarUrl: null,
+              bio: null,
+              interests: [],
+              phone: null,
+              email: null,
+              dob: null,
+              faceVerified: false,
+              deletedAt: FieldValue.serverTimestamp(),
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          );
+
+        await db()
+          .collection('publicProfiles')
+          .doc(uid)
+          .set({ schemaVersion: 1, deleted: true }, { merge: true })
+          .catch(() => undefined);
+
+        await db().collection('users').doc(uid).collection('notifications').get().then((s) =>
+          Promise.all(s.docs.map((d) => d.ref.delete())).catch(() => undefined),
+        );
+
+        await authAdmin().deleteUser(uid).catch(() => undefined);
+        logger.info('accountDeletionJob.deleted', { uid });
+      } catch (err) {
+        logger.error('accountDeletionJob.failed', { uid, error: String(err) });
+      }
+    }
+  },
+);
+
+/**
+ * Marks finished events as `completed` so settlement can be scheduled
+ * (PRD §9 event state machine).
+ */
+export const completeFinishedEvents = onSchedule(
+  { schedule: 'every 30 minutes', region: 'asia-south1', maxInstances: 1 },
+  async () => {
+    const now = Timestamp.now();
+    const events = await db()
+      .collection('events')
+      .where('status', 'in', ['live', 'sold_out'])
+      .get();
+
+    let completed = 0;
+    for (const doc of events.docs) {
+      const endAt = doc.data().schedule?.endAt as Timestamp | undefined;
+      if (!endAt || endAt.toMillis() > now.toMillis()) continue;
+      await doc.ref.set(
+        { status: 'completed', completedAt: FieldValue.serverTimestamp() },
+        { merge: true },
+      );
+      completed += 1;
+    }
+
+    if (completed > 0) logger.info('completeFinishedEvents.complete', { completed });
+  },
+);
+
+/**
+ * Locks event group chats 24 h after the event ends and archives them 7 days
+ * after that (PRD S-23 lifecycle, §13.3 `lockGroupChats` / `archiveChats`).
+ */
+export const lockGroupChats = onSchedule(
+  { schedule: 'every 15 minutes', region: 'asia-south1', maxInstances: 1 },
+  async () => {
+    const now = Date.now();
+    const chats = await db()
+      .collection('chats')
+      .where('type', '==', 'event_group')
+      .where('status', '==', 'active')
+      .limit(200)
+      .get();
+
+    let locked = 0;
+    for (const doc of chats.docs) {
+      const eventId = String(doc.data().eventId ?? '');
+      if (!eventId) continue;
+      const event = await db().collection('events').doc(eventId).get();
+      const endAt = event.data()?.schedule?.endAt as Timestamp | undefined;
+      if (!endAt) continue;
+      if (endAt.toMillis() + 24 * 60 * 60 * 1000 > now) continue;
+      await doc.ref.set({ status: 'locked', lockAt: FieldValue.serverTimestamp() }, { merge: true });
+      locked += 1;
+    }
+
+    if (locked > 0) logger.info('lockGroupChats.complete', { locked });
+  },
+);
+
+export const archiveChats = onSchedule(
+  { schedule: 'every day 04:30', timeZone: 'Asia/Kolkata', region: 'asia-south1', maxInstances: 1 },
+  async () => {
+    const cutoff = Timestamp.fromMillis(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const chats = await db()
+      .collection('chats')
+      .where('status', '==', 'locked')
+      .limit(300)
+      .get();
+
+    let archived = 0;
+    for (const doc of chats.docs) {
+      const lockAt = doc.data().lockAt as Timestamp | undefined;
+      if (!lockAt || lockAt.toMillis() > cutoff.toMillis()) continue;
+      await doc.ref.set({ status: 'archived' }, { merge: true });
+      archived += 1;
+    }
+
+    if (archived > 0) logger.info('archiveChats.complete', { archived });
+  },
+);
+
+/**
+ * Expires beacons at the end of their event (PRD S-24).
+ */
+export const expireBeacons = onSchedule(
+  { schedule: 'every 15 minutes', region: 'asia-south1', maxInstances: 1 },
+  async () => {
+    const now = Timestamp.now();
+    const beacons = await db()
+      .collection('beacons')
+      .where('status', 'in', ['active', 'full'])
+      .limit(300)
+      .get();
+
+    let expired = 0;
+    for (const doc of beacons.docs) {
+      const expiresAt = doc.data().expiresAt as Timestamp | undefined;
+      if (!expiresAt || expiresAt.toMillis() > now.toMillis()) continue;
+      await doc.ref.set({ status: 'expired' }, { merge: true });
+      expired += 1;
+    }
+
+    if (expired > 0) logger.info('expireBeacons.complete', { expired });
+  },
+);
