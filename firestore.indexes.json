@@ -317,6 +317,14 @@
     { "collectionGroup": "emergencyContactTokens", "queryScope": "COLLECTION", "fields": [
       { "fieldPath": "uid", "order": "ASCENDING" },
       { "fieldPath": "status", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "communityPosts", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "communityCollabRequests", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "postId", "order": "ASCENDING" },
+      { "fieldPath": "fromUid", "order": "ASCENDING" }
     ]}
   ],
   "fieldOverrides": []

@@ -84,6 +84,15 @@ export {
 export { createBeacon, joinBeacon, listBeacons } from './social/beacons';
 
 export {
+  createCommunityPost,
+  toggleCommunityLike,
+  addCommunityComment,
+  deleteCommunityComment,
+  shareCommunityPost,
+  requestCommunityCollab,
+} from './social/community';
+
+export {
   listChats,
   getChatMessages,
   sendMessage,

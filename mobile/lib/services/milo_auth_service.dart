@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
+import 'milo_api.dart';
 import 'milo_session_service.dart';
 
 /// Firebase Authentication + Firestore profile service for Milo.
@@ -109,10 +110,11 @@ class MiloAuthService {
  if (vid == null) return 'OTP session expired. Please request a new code.';
 
  try {
- final credential = PhoneAuthProvider.credential(verificationId: vid, smsCode: smsCode);
- final result = await auth.signInWithCredential(credential);
- if (result.user == null) return 'Verification failed. Please try again.';
- return null;
+  final credential = PhoneAuthProvider.credential(verificationId: vid, smsCode: smsCode);
+  final result = await auth.signInWithCredential(credential);
+  if (result.user == null) return 'Verification failed. Please try again.';
+  await ensureUserDocument();
+  return null;
  } on FirebaseAuthException catch (e) {
  if (e.code == 'invalid-verification-code') return 'Incorrect OTP. Please try again.';
  return e.message ?? 'OTP verification failed.';
@@ -135,11 +137,25 @@ class MiloAuthService {
  }
  }
 
- /// True when the user already completed profile setup.
- Future<bool> hasProfile() async {
- final profile = await fetchProfile();
- return profile != null && (profile['name'] ?? '').toString().isNotEmpty;
- }
+  /// Create the server-owned user document if it does not exist yet.
+  /// Safe to call repeatedly; the backend is idempotent.
+  Future<void> ensureUserDocument() async {
+  if (currentUser == null) return;
+  try {
+  await MiloApi.instance.bootstrapUser();
+  } catch (e) {
+  debugPrint('MiloAuth ensureUserDocument note: $e');
+  }
+  }
+
+  /// True when the user already completed profile setup.
+  Future<bool> hasProfile() async {
+  await ensureUserDocument();
+  final profile = await fetchProfile();
+  if (profile == null) return false;
+  final name = (profile['name'] ?? profile['displayName'] ?? '').toString().trim();
+  return name.isNotEmpty;
+  }
 
  /// Create / update the user profile document in Firestore.
  Future<String?> saveProfile({
@@ -155,55 +171,66 @@ class MiloAuthService {
  final user = currentUser;
  if (db == null || user == null) return 'Not signed in.';
 
- try {
- await db.collection('users').doc(user.uid).set({
- 'uid': user.uid,
- 'name': name,
- 'phone': normalizePhone(phone),
- 'age': age,
- 'city': city,
- 'vibes': vibes,
- 'bio': bio,
- 'role': role.name,
- 'status': 'active',
- 'discoverable': true,
- 'created_at': FieldValue.serverTimestamp(),
- 'updated_at': FieldValue.serverTimestamp(),
- }, SetOptions(merge: true));
- return null;
- } catch (e) {
- debugPrint('MiloAuth saveProfile error: $e');
- return 'Could not save profile: $e';
- }
- }
+  try {
+  await ensureUserDocument();
+  await db.collection('users').doc(user.uid).set({
+  'name': name,
+  'displayName': name,
+  'city': city,
+  'vibes': vibes,
+  'bio': bio,
+  'discoverable': true,
+  'updated_at': FieldValue.serverTimestamp(),
+  'updatedAt': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
+  return null;
+  } catch (e) {
+  debugPrint('MiloAuth saveProfile error: $e');
+  return 'Could not save profile: $e';
+  }
+  }
 
- /// Upgrade / change the signed-in user's role in Firestore and session.
- /// Returns null on success, error message otherwise.
- Future<String?> upgradeRole(MiloRole role) async {
- final db = _db;
- final user = currentUser;
- try {
- if (db != null && user != null) {
- await db.collection('users').doc(user.uid).set({
- 'role': role.name,
- 'updated_at': FieldValue.serverTimestamp(),
- }, SetOptions(merge: true));
- }
- await MiloSessionService.updateRole(role);
- return null;
- } catch (e) {
- debugPrint('MiloAuth upgradeRole error: $e');
- await MiloSessionService.updateRole(role);
- return null;
- }
- }
+  /// Roles are owned by the server. Local role switching is allowed only for
+  /// customer/staff previews or debug builds; verified upgrades go through
+  /// KYC / promoter onboarding callables.
+  Future<String?> upgradeRole(MiloRole role) async {
+  if (role == MiloRole.customer || role == MiloRole.staff || kDebugMode) {
+  await MiloSessionService.updateRole(role);
+  return null;
+  }
+  return 'Role upgrades require verification. Complete KYC or the promoter application to continue.';
+  }
 
- /// Read role from Firestore. Returns null when unavailable.
- Future<MiloRole?> fetchRole() async {
- final profile = await fetchProfile();
- if (profile == null) return null;
- return _roleFromString(profile['role']?.toString());
- }
+  /// Resolve the effective role from Firebase custom claims first, then the
+  /// server-managed `users.roles` map. Legacy client-written `role` is only
+  /// trusted in debug builds.
+  Future<MiloRole?> fetchRole() async {
+  final user = currentUser;
+  if (user != null) {
+  try {
+  final token = await user.getIdTokenResult(true);
+  final claims = token.claims ?? const <String, dynamic>{};
+  if (claims['admin'] == true) return MiloRole.admin;
+  if (claims['organizer'] == true) return MiloRole.organizer;
+  if (claims['promoter'] == true) return MiloRole.promoter;
+  if (claims['role'] == 'gate_staff') return MiloRole.staff;
+  } catch (e) {
+  debugPrint('MiloAuth fetchRole claims note: $e');
+  }
+  }
+
+  final profile = await fetchProfile();
+  if (profile == null) return null;
+  final roles = profile['roles'];
+  if (roles is Map) {
+  if (roles['organizer'] == true) return MiloRole.organizer;
+  if (roles['promoter'] == true) return MiloRole.promoter;
+  }
+  if (kDebugMode) {
+  return _roleFromString(profile['role']?.toString());
+  }
+  return MiloRole.customer;
+  }
 
  /// Server-side admin allowlist check (milo_config/admins doc in Firestore).
  Future<bool> isPhoneAdmin({String? phone}) async {
@@ -230,17 +257,17 @@ class MiloAuthService {
  final user = currentUser;
  if (user == null) return false;
 
- final profile = await fetchProfile();
- if (profile == null) return false;
+  final profile = await fetchProfile();
+  if (profile == null) return false;
 
- final role = _roleFromString(profile['role']?.toString()) ?? MiloRole.customer;
- await MiloSessionService.saveLoginSession(
- role: role,
- name: profile['name']?.toString() ?? '',
- phone: profile['phone']?.toString() ?? pendingPhone,
- uid: user.uid,
- );
- return true;
+  final role = await fetchRole() ?? MiloRole.customer;
+  await MiloSessionService.saveLoginSession(
+  role: role,
+  name: (profile['name'] ?? profile['displayName'] ?? '').toString(),
+  phone: (profile['phone'] ?? user.phoneNumber ?? pendingPhone).toString(),
+  uid: user.uid,
+  );
+  return true;
  }
 
  /// Real Google Sign-In with Firebase Auth
@@ -266,17 +293,11 @@ class MiloAuthService {
  idToken: googleAuth.idToken,
  );
 
- final userCredential = await auth.signInWithCredential(credential);
- final user = userCredential.user;
- if (user != null) {
- await MiloSessionService.saveLoginSession(
- role: MiloRole.customer,
- name: user.displayName ?? 'Jhoomo User',
- phone: user.phoneNumber ?? '',
- uid: user.uid,
- );
- }
- return userCredential;
+  final userCredential = await auth.signInWithCredential(credential);
+  if (userCredential.user != null) {
+  await ensureUserDocument();
+  }
+  return userCredential;
  } catch (e) {
  debugPrint('MiloAuth signInWithGoogle error: $e');
  rethrow;

@@ -663,7 +663,7 @@ class _HomeScreenState extends State<HomeScreen> {
  const Icon(Icons.people_alt_rounded, size: 12, color: JhoomoTokens.primary),
  const SizedBox(width: 4),
  Text(
- '+${(event.startingPrice * 0.4).toInt() + 120} going',
+ '+${event.confirmedAttendeesCount} going',
  style: GoogleFonts.inter(
  fontSize: 10,
  fontWeight: FontWeight.w600,

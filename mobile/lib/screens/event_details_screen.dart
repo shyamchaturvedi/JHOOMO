@@ -852,7 +852,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                 const Icon(Icons.people_alt_rounded, color: MiloColors.cyan, size: 18),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Who is Coming? (180+ Confirmed)',
+                                  'Who is Coming? (${widget.event.confirmedAttendeesCount}+ Confirmed)',
                                   style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
                                 ),
                               ],

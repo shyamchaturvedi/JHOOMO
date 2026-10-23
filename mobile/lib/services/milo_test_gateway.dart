@@ -17,7 +17,7 @@ import 'package:flutter/foundation.dart';
 /// • UPI VPA `success@okaxis` / any (except fail) → SUCCESS
 /// • UPI VPA containing `fail` / `decline` → FAILED
 class MiloTestGateway {
- static const bool testMode = true;
+  static const bool testMode = kDebugMode;
  static const String brandName = 'Milo Pay · Test Sandbox';
  static const String successUpi = 'success@okaxis';
  static const String failUpi = 'fail@okaxis';

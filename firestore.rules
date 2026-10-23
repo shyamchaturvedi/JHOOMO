@@ -69,7 +69,9 @@ service cloud.firestore {
       allow update: if isOwner(userId)
                     && onlyChanges([
                       'displayName','avatarUrl','bio','interests','cityId','gender',
-                      'privacy','notificationPrefs','locale','lastActiveAt','updatedAt','appVersion'
+                      'privacy','notificationPrefs','locale','lastActiveAt','updatedAt','appVersion',
+                      // Legacy mobile profile fields (safe, non-privileged).
+                      'name','city','vibes','discoverable','updated_at'
                     ])
                     && keepsSchemaVersion();
       match /devices/{id}       { allow read, write: if isOwner(userId); }
@@ -205,6 +207,20 @@ service cloud.firestore {
     match /beacons/{id} {
       allow read: if hasTicketFor(resource.data.eventId) || isAdmin(); allow write: if false;
       match /members/{m} { allow read: if hasTicketFor(get(dp('beacons/' + id)).data.eventId) || isAdmin(); allow write: if false; }
+    }
+
+    // Community is readable by signed-in users; all writes go through callables.
+    match /communityPosts/{postId} {
+      allow read: if signedIn() && resource.data.status == 'active';
+      allow write: if false;
+      match /comments/{commentId} {
+        allow read: if signedIn() && resource.data.status == 'active';
+        allow write: if false;
+      }
+    }
+    match /communityCollabRequests/{id} {
+      allow read: if signedIn() && (resource.data.fromUid == uid() || resource.data.postAuthorId == uid()) || isAdmin();
+      allow write: if false;
     }
 
     // ───────── safety, reports, support ─────────

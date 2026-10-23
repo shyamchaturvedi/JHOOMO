@@ -9,11 +9,13 @@ class MiloRazorpayService {
 
   Razorpay? _razorpay;
 
-  // Replace with production/test key or pass through compile flag --dart-define=RAZORPAY_KEY=rzp_live_xxx
+  // Pass the real key at build time: --dart-define=RAZORPAY_KEY=rzp_live_xxx
   static const String razorpayKey = String.fromEnvironment(
     'RAZORPAY_KEY',
-    defaultValue: 'rzp_test_1DP5mmOlF5G5ag', // Default Razorpay Test Key
+    defaultValue: '',
   );
+
+  static bool get isConfigured => razorpayKey.isNotEmpty;
 
   void init() {
     _razorpay ??= Razorpay();
@@ -31,6 +33,10 @@ class MiloRazorpayService {
     required Function(PaymentFailureResponse) onError,
     required Function(ExternalWalletResponse) onExternalWallet,
   }) {
+    if (!isConfigured) {
+      debugPrint('Razorpay is not configured. Pass --dart-define=RAZORPAY_KEY=<key>.');
+      return;
+    }
     init();
 
     _razorpay!.clear();

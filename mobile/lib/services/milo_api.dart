@@ -240,10 +240,33 @@ class MiloApi {
  Future<Map<String, dynamic>> saveKycDraft(Map<String, dynamic> draft) =>
  call('saveKycDraft', draft);
 
- Future<Map<String, dynamic>> submitKyc(Map<String, dynamic> submission) =>
+ Future<Map<String, dynamic>> submitKyc([Map<String, dynamic> submission = const {}]) =>
  call('submitKyc', submission);
 
  Future<Map<String, dynamic>> getKycStatus() => call('getKycStatus');
+
+ Future<Map<String, dynamic>> verifyPanCallable(String pan) =>
+ call('verifyPanCallable', {'pan': pan});
+
+ Future<Map<String, dynamic>> verifyBankCallable({
+ required String bankAccountNumber,
+ required String ifsc,
+ required String name,
+ }) =>
+ call('verifyBankCallable', {
+ 'bankAccountNumber': bankAccountNumber,
+ 'ifsc': ifsc,
+ 'name': name,
+ });
+
+ Future<Map<String, dynamic>> sendEmailCodeCallable(String email) =>
+ call('sendEmailCodeCallable', {'email': email});
+
+ Future<Map<String, dynamic>> verifyEmailCodeCallable({
+ required String email,
+ required String code,
+ }) =>
+ call('verifyEmailCodeCallable', {'email': email, 'code': code});
 
  Future<Map<String, dynamic>> saveEventDraft(Map<String, dynamic> draft) =>
  call('saveEventDraft', draft);
@@ -362,10 +385,53 @@ class MiloApi {
  Future<Map<String, dynamic>> joinBeacon(String beaconId) =>
  call('joinBeacon', {'beaconId': beaconId});
 
- Future<Map<String, dynamic>> listBeacons(String eventId) =>
- call('listBeacons', {'eventId': eventId});
+  Future<Map<String, dynamic>> listBeacons(String eventId) =>
+  call('listBeacons', {'eventId': eventId});
 
- // chat 
+  // community
+
+  Future<Map<String, dynamic>> createCommunityPost({
+  required String content,
+  String? eventId,
+  String? eventTitle,
+  String? mediaUrl,
+  bool isCollabOpen = false,
+  String? collabType,
+  }) =>
+  call('createCommunityPost', {
+  'content': content,
+  'eventId': eventId,
+  'eventTitle': eventTitle,
+  'mediaUrl': mediaUrl,
+  'isCollabOpen': isCollabOpen,
+  'collabType': collabType,
+  });
+
+  Future<Map<String, dynamic>> toggleCommunityLike(String postId) =>
+  call('toggleCommunityLike', {'postId': postId});
+
+  Future<Map<String, dynamic>> addCommunityComment({
+  required String postId,
+  required String text,
+  }) =>
+  call('addCommunityComment', {'postId': postId, 'text': text});
+
+  Future<Map<String, dynamic>> deleteCommunityComment({
+  required String postId,
+  required String commentId,
+  }) =>
+  call('deleteCommunityComment', {'postId': postId, 'commentId': commentId});
+
+  Future<Map<String, dynamic>> shareCommunityPost(String postId) =>
+  call('shareCommunityPost', {'postId': postId});
+
+  Future<Map<String, dynamic>> requestCommunityCollab({
+  required String postId,
+  String? message,
+  }) =>
+  call('requestCommunityCollab', {'postId': postId, 'message': message});
+
+  // chat 
 
  Future<Map<String, dynamic>> listChats({String? type, int limit = 30}) =>
  call('listChats', {'type': type, 'limit': limit});
@@ -506,13 +572,27 @@ class MiloApi {
 
  // promoter 
 
- Future<Map<String, dynamic>> becomePromoter({
- required String code,
- required String pan,
- String? legalName,
- }) =>
- call('becomePromoter', {'code': code, 'pan': pan, 'legalName': legalName});
+  Future<Map<String, dynamic>> becomePromoter({
+  required String displayName,
+  required String pan,
+  required String code,
+  required bool termsAccepted,
+  }) =>
+  call('becomePromoter', {
+  'displayName': displayName,
+  'pan': pan,
+  'code': code,
+  'termsAccepted': termsAccepted,
+  });
 
- Future<Map<String, dynamic>> requestPromoterPayout({required int amountPaise, String? pan}) =>
- call('requestPromoterPayout', {'amountPaise': amountPaise, 'pan': pan});
+  Future<Map<String, dynamic>> requestPromoterPayout({
+  required String bankAccountNumber,
+  required String ifsc,
+  required String bankName,
+  }) =>
+  call('requestPromoterPayout', {
+  'bankAccountNumber': bankAccountNumber,
+  'ifsc': ifsc,
+  'bankName': bankName,
+  });
 }

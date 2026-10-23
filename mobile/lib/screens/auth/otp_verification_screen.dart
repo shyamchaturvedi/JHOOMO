@@ -76,36 +76,24 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
  await _afterVerified();
  }
 
- Future<void> _afterVerified() async {
- if (_navigated || !mounted) return;
- _navigated = true;
+  Future<void> _afterVerified() async {
+  if (_navigated || !mounted) return;
+  _navigated = true;
 
- // Automatically initialize/save session as Default Customer
- final uid = MiloAuthService.instance.currentUser?.uid ?? 'cust_${DateTime.now().millisecondsSinceEpoch}';
- await MiloSessionService.saveLoginSession(
- role: MiloRole.customer,
- name: 'Sahil',
- phone: widget.phoneNumber,
- uid: uid,
- );
+  final hasProfile = await MiloAuthService.instance.hasProfile();
+  if (!mounted) return;
+  if (hasProfile) {
+  await MiloAuthService.instance.restoreSession();
+  if (!mounted) return;
+  LoginRouter.go(context, MiloSessionService.currentRoleNotifier.value);
+  return;
+  }
 
- // Save default profile to Firestore silently in background if Firebase is active
- try {
- if (MiloAuthService.instance.currentUser != null) {
- await MiloAuthService.instance.saveProfile(
- name: 'Sahil',
- phone: widget.phoneNumber,
- age: 23,
- city: 'Lucknow',
- role: MiloRole.customer,
- );
- }
- } catch (_) {}
-
- if (!mounted) return;
- // Route directly to main customer app
- LoginRouter.go(context, MiloRole.customer);
- }
+  Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (context) => ProfileSetupScreen(phoneNumber: widget.phoneNumber)),
+  );
+  }
 
  @override
  Widget build(BuildContext context) {

@@ -1,6 +1,7 @@
 import '../services/milo_razorpay_service.dart';
 import 'dart:async';
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -101,6 +102,18 @@ class _MiloBmsPaymentSheetState extends State<MiloBmsPaymentSheet> {
  
   void _triggerRazorpayCheckout() {
     HapticFeedback.mediumImpact();
+    if (!MiloRazorpayService.isConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: MiloColors.bgSurface,
+          content: Text(
+            'Online checkout is not configured in this build. Please use host UPI or pay at the gate.',
+            style: GoogleFonts.inter(color: MiloColors.textPrimary, fontWeight: FontWeight.w600),
+          ),
+        ),
+      );
+      return;
+    }
     MiloRazorpayService.instance.openCheckout(
       context: context,
       event: widget.event,
@@ -121,9 +134,9 @@ class _MiloBmsPaymentSheetState extends State<MiloBmsPaymentSheet> {
           attendeePhone: _phoneController.text.trim(),
           organizerUpiId: 'milo.pay@razorpay',
           proofImageUrl: null,
-          note: 'Verified online via Razorpay (Payment ID: ${response.paymentId})',
+          note: 'Razorpay payment submitted for verification (Payment ID: ${response.paymentId})',
           paymentMethod: 'RAZORPAY',
-          autoConfirm: true,
+          autoConfirm: false,
         );
 
         if (widget.referralCode != null && widget.referralCode!.isNotEmpty) {
@@ -198,10 +211,10 @@ class _MiloBmsPaymentSheetState extends State<MiloBmsPaymentSheet> {
  attendeePhone: _phoneController.text.trim(),
  organizerUpiId: 'milo.pay@icici',
  proofImageUrl: null,
- note: 'Auto-verified via $appName — Milo Pay sandbox payment ${result.orderId}',
- paymentMethod: 'MILO_TEST_GATEWAY',
- autoConfirm: true,
- );
+  note: 'Sandbox payment submitted for verification via $appName (${result.orderId})',
+  paymentMethod: 'MILO_TEST_GATEWAY',
+  autoConfirm: false,
+  );
 
  // Record Promoter / Influencer Attribution if referral applied
  if (widget.referralCode != null && widget.referralCode!.isNotEmpty) {
@@ -303,56 +316,24 @@ class _MiloBmsPaymentSheetState extends State<MiloBmsPaymentSheet> {
  children: [
  Container(
  padding: const EdgeInsets.all(16),
- decoration: const BoxDecoration(
- color: MiloColors.emerald,
- shape: BoxShape.circle,
- ),
- child: const Icon(Icons.check_rounded, color: Colors.white, size: 40),
+  decoration: const BoxDecoration(
+  color: MiloColors.amber,
+  shape: BoxShape.circle,
+  ),
+  child: const Icon(Icons.schedule_rounded, color: Colors.white, size: 40),
  ),
  const SizedBox(height: 18),
- Text(
- 'Instant Pass Confirmed! ',
- style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w900, color: MiloColors.textPrimary),
- ),
- const SizedBox(height: 6),
- Text(
-                    'Payment verified via Milo Pay. Your dynamic anti-fraud QR code is ready for entry at Gate 1.',
+  Text(
+  'Payment Submitted for Verification',
+  style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w900, color: MiloColors.textPrimary),
+  ),
+  const SizedBox(height: 6),
+  Text(
+                    'Your payment reference has been sent to the organizer. Your QR pass will be issued only after the payment is verified.',
                     style: GoogleFonts.inter(color: MiloColors.textSecondary, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  // Broadcast Auto-Enroll Banner
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFFF1F2), Color(0xFFFFFAF9)],
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFFDA4AF)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.campaign_rounded, color: Color(0xFFE11D48), size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Auto-Joined Official Broadcast Channel',
-                                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF881337)),
-                              ),
-                              Text(
-                                'Live gate alerts, parking maps & host updates.',
-                                style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF9F1239)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
@@ -366,7 +347,7 @@ class _MiloBmsPaymentSheetState extends State<MiloBmsPaymentSheet> {
                         Navigator.pop(ctx);
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const MyTicketsScreen()));
                       },
-                      child: Text('View M-Ticket QR Pass 🎟️',
+                      child: Text('View My Tickets',
                           style: GoogleFonts.inter(fontWeight: FontWeight.w900, color: MiloColors.textPrimary, fontSize: 15)),
                     ),
                   ),

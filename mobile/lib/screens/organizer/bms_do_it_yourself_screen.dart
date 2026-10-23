@@ -1,6 +1,8 @@
+import '../../services/sandbox_kyc_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../services/milo_api.dart';
 import '../../services/milo_auth_service.dart';
 import '../../services/milo_session_service.dart';
 import 'organizer_dashboard_screen.dart';
@@ -20,18 +22,26 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  final TextEditingController _panController = TextEditingController();
  final TextEditingController _orgNameController = TextEditingController();
  final TextEditingController _addressController = TextEditingController();
+ final TextEditingController _cityController = TextEditingController();
+ final TextEditingController _stateController = TextEditingController();
+ final TextEditingController _pincodeController = TextEditingController();
  String _panAadhaarStatus = 'Yes'; // Yes, No, NA
 
  // Step 2 Controllers (Contact Person Details)
  final TextEditingController _contactNameController = TextEditingController();
  final TextEditingController _emailController = TextEditingController();
+ final TextEditingController _emailCodeController = TextEditingController();
  final TextEditingController _contactMobileController = TextEditingController();
+ bool _emailCodeSent = false;
+ bool _emailVerified = false;
 
  // Step 3 Controllers (Bank Details)
  final TextEditingController _accountNumberController = TextEditingController();
  final TextEditingController _confirmAccountController = TextEditingController();
  final TextEditingController _ifscController = TextEditingController();
+ final TextEditingController _bankNameController = TextEditingController();
  bool _isBankVerified = false;
+ bool _agreementAccepted = false;
 
  @override
  void initState() {
@@ -40,7 +50,7 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  final phone = MiloAuthService.instance.currentUser?.phoneNumber ??
  MiloSessionService.currentUserPhone;
  _contactMobileController.text =
- phone.isNotEmpty ? phone.replaceAll('+91', '').trim() : '9598023701';
+ phone.isNotEmpty ? phone.replaceAll('+91', '').trim() : '';
  _contactNameController.text = MiloSessionService.currentUserName;
  }
 
@@ -49,16 +59,28 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  _panController.dispose();
  _orgNameController.dispose();
  _addressController.dispose();
+ _cityController.dispose();
+ _stateController.dispose();
+ _pincodeController.dispose();
  _contactNameController.dispose();
  _emailController.dispose();
+ _emailCodeController.dispose();
  _contactMobileController.dispose();
  _accountNumberController.dispose();
  _confirmAccountController.dispose();
  _ifscController.dispose();
+ _bankNameController.dispose();
  super.dispose();
  }
 
- void _verifyBank() async {
+ String get _formattedPhone {
+ final digits = _contactMobileController.text.replaceAll(RegExp(r'\D'), '');
+ if (digits.length == 10) return '+91$digits';
+ if (digits.length == 12 && digits.startsWith('91')) return '+$digits';
+ return _contactMobileController.text.trim();
+ }
+
+ Future<void> _verifyBank() async {
  if (_accountNumberController.text.length < 9) {
  _showSnack('Please enter a valid Account Number');
  return;
@@ -67,20 +89,48 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  _showSnack('Account numbers do not match');
  return;
  }
- if (_ifscController.text.length < 11) {
+ if (!RegExp(r'^[A-Z]{4}0[A-Z0-9]{6}$')
+ .hasMatch(_ifscController.text.trim().toUpperCase())) {
  _showSnack('Please enter a valid 11-character IFSC code');
+ return;
+ }
+ if (_orgNameController.text.trim().isEmpty) {
+ _showSnack('Complete organisation details before bank verification');
  return;
  }
 
  setState(() => _isSaving = true);
- await Future.delayed(const Duration(milliseconds: 900));
+ try {
+ final result = await MiloApi.instance.verifyBankCallable(
+ bankAccountNumber: _accountNumberController.text.trim(),
+ ifsc: _ifscController.text.trim().toUpperCase(),
+ name: _orgNameController.text.trim(),
+ );
+ final passes = result['passes'] == true;
+ if (passes) {
+ final bankName = (result['bankName'] ?? '').toString().trim();
+ if (bankName.isNotEmpty) _bankNameController.text = bankName;
+ }
  if (!mounted) return;
  setState(() {
  _isSaving = false;
- _isBankVerified = true;
+ _isBankVerified = passes;
  });
-
- _showSnack('Bank Account verified successfully with Penny Drop! ', isSuccess: true);
+ _showSnack(
+ passes
+ ? 'Bank account verified with penny-drop.'
+ : ((result['message'] ?? 'Bank verification could not be completed.').toString()),
+ isSuccess: passes,
+ );
+ } on MiloApiException catch (e) {
+ if (!mounted) return;
+ setState(() => _isSaving = false);
+ _showSnack(e.message);
+ } catch (_) {
+ if (!mounted) return;
+ setState(() => _isSaving = false);
+ _showSnack('Bank verification failed. Please check details and retry.');
+ }
  }
 
  void _showSnack(String msg, {bool isSuccess = false}) {
@@ -96,25 +146,202 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  );
  }
 
+ Future<void> _sendEmailCode() async {
+ final email = _emailController.text.trim().toLowerCase();
+ if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+ _showSnack('Please enter a valid business email');
+ return;
+ }
+ setState(() => _isSaving = true);
+ try {
+ await MiloApi.instance.sendEmailCodeCallable(email);
+ if (!mounted) return;
+ setState(() {
+ _isSaving = false;
+ _emailCodeSent = true;
+ _emailVerified = false;
+ });
+ _showSnack('Verification code sent to $email', isSuccess: true);
+ } on MiloApiException catch (e) {
+ if (!mounted) return;
+ setState(() => _isSaving = false);
+ _showSnack(e.message);
+ } catch (_) {
+ if (!mounted) return;
+ setState(() => _isSaving = false);
+ _showSnack('Could not send verification code.');
+ }
+ }
+
+ Future<void> _verifyEmailCode() async {
+ final email = _emailController.text.trim().toLowerCase();
+ final code = _emailCodeController.text.trim();
+ if (code.length != 6) {
+ _showSnack('Enter the 6-digit email verification code');
+ return;
+ }
+ setState(() => _isSaving = true);
+ try {
+ await MiloApi.instance.verifyEmailCodeCallable(email: email, code: code);
+ if (!mounted) return;
+ setState(() {
+ _isSaving = false;
+ _emailVerified = true;
+ });
+ _showSnack('Business email verified.', isSuccess: true);
+ } on MiloApiException catch (e) {
+ if (!mounted) return;
+ setState(() => _isSaving = false);
+ _showSnack(e.message);
+ } catch (_) {
+ if (!mounted) return;
+ setState(() => _isSaving = false);
+ _showSnack('Email verification failed.');
+ }
+ }
+
+ Future<bool> _saveDraft(int step) async {
+ try {
+ final Map<String, dynamic> payload;
+ if (step == 1) {
+ payload = {
+ 'pan': _panController.text.trim().toUpperCase(),
+ 'legalName': _orgNameController.text.trim(),
+ 'address': {
+ 'line1': _addressController.text.trim(),
+ 'city': _cityController.text.trim(),
+ 'state': _stateController.text.trim(),
+ 'pincode': _pincodeController.text.trim(),
+ },
+ 'aadhaarLinked': _panAadhaarStatus.toLowerCase(),
+ };
+ } else if (step == 2) {
+ payload = {
+ 'pocName': _contactNameController.text.trim(),
+ 'businessEmail': _emailController.text.trim().toLowerCase(),
+ 'phone': _formattedPhone,
+ };
+ } else {
+ if (!_agreementAccepted) {
+ _showSnack('Accept the organizer agreement before saving bank details.');
+ return false;
+ }
+ if (_bankNameController.text.trim().isEmpty) {
+ _showSnack('Enter the bank name.');
+ return false;
+ }
+ payload = {
+ 'bankAccountNumber': _accountNumberController.text.trim(),
+ 'confirmAccountNumber': _confirmAccountController.text.trim(),
+ 'ifsc': _ifscController.text.trim().toUpperCase(),
+ 'bankName': _bankNameController.text.trim(),
+ 'agreementAccepted': true,
+ };
+ }
+ await MiloApi.instance.saveKycDraft({
+ 'step': step,
+ 'step$step': payload,
+ });
+ return true;
+ } on MiloApiException catch (e) {
+ _showSnack(e.message);
+ return false;
+ } catch (_) {
+ _showSnack('Could not save KYC details. Please check your connection.');
+ return false;
+ }
+ }
+
+ Future<void> _nextStep() async {
+ if (_isSaving) return;
+
+ if (_currentStep == 1) {
+ if (!RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$')
+ .hasMatch(_panController.text.trim().toUpperCase())) {
+ _showSnack('Please enter a valid 10-character PAN number');
+ return;
+ }
+ if (_orgNameController.text.trim().isEmpty) {
+ _showSnack('Please enter Organisation Name');
+ return;
+ }
+ if (_addressController.text.trim().isEmpty ||
+ _cityController.text.trim().isEmpty ||
+ _stateController.text.trim().isEmpty ||
+ !RegExp(r'^[1-9][0-9]{5}$').hasMatch(_pincodeController.text.trim())) {
+ _showSnack('Enter address, city, state and a valid 6-digit PIN code');
+ return;
+ }
+ setState(() => _isSaving = true);
+ final saved = await _saveDraft(1);
+ if (!mounted) return;
+ setState(() {
+ _isSaving = false;
+ if (saved) _currentStep = 2;
+ });
+ return;
+ }
+
+ if (_currentStep == 2) {
+ if (_contactNameController.text.trim().isEmpty) {
+ _showSnack('Please enter Contact Person Name');
+ return;
+ }
+ if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+ .hasMatch(_emailController.text.trim())) {
+ _showSnack('Please enter a valid Official Email Address');
+ return;
+ }
+ if (!_emailVerified) {
+ _showSnack('Verify the business email before proceeding');
+ return;
+ }
+ setState(() => _isSaving = true);
+ final saved = await _saveDraft(2);
+ if (!mounted) return;
+ setState(() {
+ _isSaving = false;
+ if (saved) _currentStep = 3;
+ });
+ return;
+ }
+
+ await _submitRegistration();
+ }
+
  Future<void> _submitRegistration() async {
  if (!_isBankVerified) {
  _showSnack('Please click "Verify Bank Details" before proceeding.');
  return;
  }
+ if (!_agreementAccepted) {
+ _showSnack('Please accept the organizer agreement.');
+ return;
+ }
+ if (_bankNameController.text.trim().isEmpty) {
+ _showSnack('Please enter the bank name.');
+ return;
+ }
 
  setState(() => _isSaving = true);
 
- final error = await MiloAuthService.instance.upgradeRole(MiloRole.organizer);
+ try {
+ if (!await _saveDraft(3)) {
+ if (mounted) setState(() => _isSaving = false);
+ return;
+ }
+
+ final result = await MiloApi.instance.submitKyc();
+ final status = (result['kycStatus'] ?? 'submitted').toString();
+ final role = await MiloAuthService.instance.fetchRole();
+ if (role == MiloRole.organizer) {
+ await MiloSessionService.updateRole(MiloRole.organizer);
+ }
 
  if (!mounted) return;
  setState(() => _isSaving = false);
 
- if (error != null) {
- _showSnack(error);
- return;
- }
-
- // Success dialog
+ final verified = status == 'auto_verified' || status == 'approved';
  showDialog(
  context: context,
  barrierDismissible: false,
@@ -122,33 +349,62 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
  title: Row(
  children: [
- const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 28),
+ Icon(
+ verified ? Icons.check_circle_rounded : Icons.hourglass_top_rounded,
+ color: verified ? const Color(0xFF10B981) : Colors.amber,
+ size: 28,
+ ),
  const SizedBox(width: 10),
- Text('Organizer Verified!', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 18)),
+ Text(
+ verified ? 'Organizer Verified!' : 'KYC Submitted',
+ style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 18),
+ ),
  ],
  ),
  content: Text(
- 'Your organization profile & bank account have been linked.\nYou can now host events, add gate staff, and sell tickets!',
- style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF4B5563), height: 1.45),
+ verified
+ ? 'Your PAN, email and bank account checks passed. You can now create events and manage gate staff.'
+ : 'Your KYC is under review. You can create draft events now, and payouts unlock once Milo approves verification.',
+ style: GoogleFonts.inter(
+ fontSize: 13,
+ color: const Color(0xFF4B5563),
+ height: 1.45,
+ ),
  ),
  actions: [
  ElevatedButton(
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF1E3A8A), // DIY Royal Navy
+ backgroundColor: const Color(0xFF1E3A8A),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
  ),
  onPressed: () {
  Navigator.pop(ctx);
+ if (verified) {
  Navigator.pushReplacement(
  context,
  MaterialPageRoute(builder: (_) => const OrganizerDashboardScreen()),
  );
+ } else {
+ Navigator.pop(context);
+ }
  },
- child: Text('Open Organizer Dashboard ', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: Colors.white)),
+ child: Text(
+ verified ? 'Open Organizer Dashboard' : 'Done',
+ style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: Colors.white),
+ ),
  ),
  ],
  ),
  );
+ } on MiloApiException catch (e) {
+ if (!mounted) return;
+ setState(() => _isSaving = false);
+ _showSnack(e.message);
+ } catch (_) {
+ if (!mounted) return;
+ setState(() => _isSaving = false);
+ _showSnack('Could not submit KYC. Please try again.');
+ }
  }
 
  @override
@@ -295,8 +551,14 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  side: const BorderSide(color: Color(0xFFCBD5E1)),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
  ),
- onPressed: () {
- _showSnack('Draft details saved successfully! ', isSuccess: true);
+ onPressed: _isSaving ? null : () async {
+ setState(() => _isSaving = true);
+ final saved = await _saveDraft(_currentStep);
+ if (!mounted) return;
+ setState(() => _isSaving = false);
+ if (saved) {
+ _showSnack('Draft details saved successfully!', isSuccess: true);
+ }
  },
  child: Text(
  'Save details',
@@ -319,31 +581,7 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  elevation: 0,
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
  ),
- onPressed: _isSaving ? null : () {
- if (_currentStep == 1) {
- if (_panController.text.length < 10) {
- _showSnack('Please enter a valid 10-character PAN number');
- return;
- }
- if (_orgNameController.text.trim().isEmpty) {
- _showSnack('Please enter Organisation Name');
- return;
- }
- setState(() => _currentStep = 2);
- } else if (_currentStep == 2) {
- if (_contactNameController.text.trim().isEmpty) {
- _showSnack('Please enter Contact Person Name');
- return;
- }
- if (_emailController.text.trim().isEmpty) {
- _showSnack('Please enter Official Email Address');
- return;
- }
- setState(() => _currentStep = 3);
- } else {
- _submitRegistration();
- }
- },
+ onPressed: _isSaving ? null : _nextStep,
  child: _isSaving
  ? const SizedBox(
  width: 20,
@@ -397,12 +635,6 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  controller: _panController,
  textCapitalization: TextCapitalization.characters,
  maxLength: 10,
- onChanged: (val) {
- if (val.length == 10 && _orgNameController.text.isEmpty) {
- _orgNameController.text = 'AROVIN EVENTS & ENTERTAINMENT PVT LTD';
- setState(() {});
- }
- },
  decoration: _inputDecoration('Enter PAN card number'),
  ),
  Text(
@@ -431,6 +663,47 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  controller: _addressController,
  maxLines: 2,
  decoration: _inputDecoration('Enter your organisation address'),
+ ),
+ const SizedBox(height: 16),
+ Row(
+ children: [
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ _fieldLabel('City'),
+ const SizedBox(height: 6),
+ TextField(
+ controller: _cityController,
+ decoration: _inputDecoration('City'),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ _fieldLabel('State'),
+ const SizedBox(height: 6),
+ TextField(
+ controller: _stateController,
+ decoration: _inputDecoration('State'),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 16),
+ _fieldLabel('PIN Code'),
+ const SizedBox(height: 6),
+ TextField(
+ controller: _pincodeController,
+ keyboardType: TextInputType.number,
+ maxLength: 6,
+ decoration: _inputDecoration('6-digit PIN code'),
  ),
  const SizedBox(height: 20),
 
@@ -490,8 +763,101 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  TextField(
  controller: _emailController,
  keyboardType: TextInputType.emailAddress,
+ onChanged: (_) {
+ if (_emailVerified || _emailCodeSent) {
+ setState(() {
+ _emailVerified = false;
+ _emailCodeSent = false;
+ });
+ }
+ },
  decoration: _inputDecoration('Enter your email address'),
  ),
+ const SizedBox(height: 10),
+ if (_emailVerified)
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+ decoration: BoxDecoration(
+ color: const Color(0xFFECFDF5),
+ borderRadius: BorderRadius.circular(10),
+ border: Border.all(color: const Color(0xFF10B981)),
+ ),
+ child: Row(
+ children: [
+ const Icon(Icons.verified_rounded, color: Color(0xFF10B981), size: 18),
+ const SizedBox(width: 8),
+ Expanded(
+ child: Text(
+ 'Business email verified',
+ style: GoogleFonts.inter(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: const Color(0xFF047857),
+ ),
+ ),
+ ),
+ ],
+ ),
+ )
+ else ...[
+ if (_emailCodeSent) ...[
+ Row(
+ children: [
+ Expanded(
+ child: TextField(
+ controller: _emailCodeController,
+ keyboardType: TextInputType.number,
+ maxLength: 6,
+ decoration: _inputDecoration('6-digit code'),
+ ),
+ ),
+ const SizedBox(width: 10),
+ SizedBox(
+ height: 45,
+ child: ElevatedButton(
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFF2563EB),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(10),
+ ),
+ ),
+ onPressed: _isSaving ? null : _verifyEmailCode,
+ child: Text(
+ 'Verify',
+ style: GoogleFonts.inter(
+ fontWeight: FontWeight.w700,
+ color: Colors.white,
+ ),
+ ),
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 8),
+ ],
+ SizedBox(
+ width: double.infinity,
+ height: 44,
+ child: OutlinedButton.icon(
+ style: OutlinedButton.styleFrom(
+ side: const BorderSide(color: Color(0xFF2563EB)),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(10),
+ ),
+ ),
+ onPressed: _isSaving ? null : _sendEmailCode,
+ icon: const Icon(Icons.mark_email_read_outlined, size: 18),
+ label: Text(
+ _emailCodeSent ? 'Resend verification code' : 'Send email verification code',
+ style: GoogleFonts.inter(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: const Color(0xFF2563EB),
+ ),
+ ),
+ ),
+ ),
+ ],
  const SizedBox(height: 18),
 
  _fieldLabel('Mobile Number'),
@@ -499,16 +865,11 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  TextField(
  controller: _contactMobileController,
  keyboardType: TextInputType.phone,
- readOnly: true,
- decoration: _inputDecoration('Mobile number').copyWith(
- fillColor: const Color(0xFFF1F5F9),
- filled: true,
- suffixIcon: const Icon(Icons.lock_outline, color: Color(0xFF94A3B8), size: 18),
- ),
+ decoration: _inputDecoration('Mobile number'),
  ),
  const SizedBox(height: 6),
  Text(
- 'Mobile number is verified from your primary login session.',
+ 'Mobile number is linked to your Milo login and verified at sign-in.',
  style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF94A3B8)),
  ),
  ],
@@ -534,6 +895,9 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  controller: _accountNumberController,
  keyboardType: TextInputType.number,
  obscureText: true,
+ onChanged: (_) {
+ if (_isBankVerified) setState(() => _isBankVerified = false);
+ },
  decoration: _inputDecoration('Enter account number'),
  ),
  const SizedBox(height: 16),
@@ -543,6 +907,9 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  TextField(
  controller: _confirmAccountController,
  keyboardType: TextInputType.number,
+ onChanged: (_) {
+ if (_isBankVerified) setState(() => _isBankVerified = false);
+ },
  decoration: _inputDecoration('Re-enter account number'),
  ),
  const SizedBox(height: 16),
@@ -553,7 +920,18 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  controller: _ifscController,
  textCapitalization: TextCapitalization.characters,
  maxLength: 11,
+ onChanged: (_) {
+ if (_isBankVerified) setState(() => _isBankVerified = false);
+ },
  decoration: _inputDecoration('Enter bank IFSC'),
+ ),
+ const SizedBox(height: 16),
+
+ _fieldLabel('Bank Name'),
+ const SizedBox(height: 6),
+ TextField(
+ controller: _bankNameController,
+ decoration: _inputDecoration('e.g. HDFC Bank'),
  ),
  const SizedBox(height: 14),
 
@@ -568,14 +946,16 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  ),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
  ),
- onPressed: _verifyBank,
+ onPressed: _isSaving ? null : _verifyBank,
  icon: Icon(
  _isBankVerified ? Icons.check_circle : Icons.verified_user_outlined,
  color: _isBankVerified ? const Color(0xFF10B981) : const Color(0xFF2563EB),
  size: 20,
  ),
  label: Text(
- _isBankVerified ? 'Verified: HDFC Bank (Lucknow Br)' : 'Verify Bank Details',
+ _isBankVerified
+ ? 'Bank account verified'
+ : 'Verify Bank Details',
  style: GoogleFonts.inter(
  fontSize: 13,
  fontWeight: FontWeight.w700,
@@ -583,6 +963,32 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  ),
  ),
  ),
+ ),
+ const SizedBox(height: 14),
+
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Checkbox(
+ value: _agreementAccepted,
+ activeColor: const Color(0xFF2563EB),
+ onChanged: (value) =>
+ setState(() => _agreementAccepted = value ?? false),
+ ),
+ Expanded(
+ child: Padding(
+ padding: const EdgeInsets.only(top: 10),
+ child: Text(
+ 'I accept the Milo organizer agreement and confirm that the PAN and bank account belong to the same legal entity.',
+ style: GoogleFonts.inter(
+ fontSize: 11,
+ color: const Color(0xFF64748B),
+ height: 1.35,
+ ),
+ ),
+ ),
+ ),
+ ],
  ),
  ],
  );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../services/milo_api.dart';
 import '../../services/milo_session_service.dart';
 import 'promoter_dashboard_screen.dart';
 
@@ -14,21 +15,17 @@ class BecomeInfluencerPromoterScreen extends StatefulWidget {
 class _BecomeInfluencerPromoterScreenState
     extends State<BecomeInfluencerPromoterScreen> {
   final _nameController = TextEditingController(
-    text: MiloSessionService.currentUserName.isNotEmpty
-        ? MiloSessionService.currentUserName
-        : 'Sahil',
+    text: MiloSessionService.currentUserName,
   );
-  final _handleController = TextEditingController(text: '@sahil_vibes');
+  final _handleController = TextEditingController();
   final _phoneController = TextEditingController(
-    text: MiloSessionService.currentUserPhone.isNotEmpty
-        ? MiloSessionService.currentUserPhone
-        : '9876543210',
+    text: MiloSessionService.currentUserPhone,
   );
-  final _upiController = TextEditingController(text: 'sahil@upi');
+  final _panController = TextEditingController();
 
   String _selectedCategory = 'LIFESTYLE & NIGHTLIFE';
   String _selectedReach = '10K - 50K';
-  bool _agreedToTerms = true;
+  bool _agreedToTerms = false;
   bool _isSubmitting = false;
 
   final List<String> _categories = [
@@ -51,59 +48,99 @@ class _BecomeInfluencerPromoterScreenState
     _nameController.dispose();
     _handleController.dispose();
     _phoneController.dispose();
-    _upiController.dispose();
+    _panController.dispose();
     super.dispose();
   }
 
   void _submitRegistration() async {
     final handle = _handleController.text.trim();
     final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final pan = _panController.text.trim().toUpperCase();
 
-    if (handle.isEmpty || name.isEmpty) {
+    if (handle.isEmpty || name.isEmpty || phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter name and social handle')),
+        const SnackBar(content: Text('Please enter name, phone and social handle')),
+      );
+      return;
+    }
+    if (!RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$').hasMatch(pan)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid PAN number (ABCDE1234F)')),
+      );
+      return;
+    }
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the promoter guidelines')),
       );
       return;
     }
 
     setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(milliseconds: 600));
 
-    // Save Promoter session
-    await MiloSessionService.saveLoginSession(
-      role: MiloRole.promoter,
-      name: name,
-      phone: _phoneController.text.trim(),
-      uid: MiloSessionService.currentUid.isNotEmpty
-          ? MiloSessionService.currentUid
-          : 'promoter-${DateTime.now().millisecondsSinceEpoch}',
-    );
+    var code = handle
+        .replaceAll('@', '')
+        .toUpperCase()
+        .replaceAll(RegExp(r'[^A-Z0-9]'), '');
+    if (code.length < 3) {
+      code = 'PROMO${code.isEmpty ? DateTime.now().millisecondsSinceEpoch : code}';
+    }
+    if (code.length > 12) code = code.substring(0, 12);
 
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
+    try {
+      await MiloApi.instance.becomePromoter(
+        displayName: name,
+        pan: pan,
+        code: code,
+        termsAccepted: true,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: const Color(0xFF0F172A),
-        content: Text(
-          'Registered as Promoter! Welcome $handle',
-          style: GoogleFonts.inter(
-            color: const Color(0xFF10B981),
-            fontWeight: FontWeight.w700,
+      await MiloSessionService.saveLoginSession(
+        role: MiloRole.promoter,
+        name: name,
+        phone: phone,
+        uid: MiloSessionService.currentUid,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF0F172A),
+          content: Text(
+            'Promoter account activated! Your code is $code',
+            style: GoogleFonts.inter(
+              color: const Color(0xFF10B981),
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PromoterDashboardScreen(
-          promoterHandle: handle.startsWith('@') ? handle : '@$handle',
-          promoterName: name,
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PromoterDashboardScreen(
+            promoterHandle: handle.startsWith('@') ? handle : '@$handle',
+            promoterName: name,
+          ),
         ),
-      ),
-    );
+      );
+    } on MiloApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not register promoter. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -239,12 +276,12 @@ class _BecomeInfluencerPromoterScreenState
             ),
             const SizedBox(height: 14),
 
-            // UPI ID for Instant Payout
+            // PAN for payout compliance
             _buildInputField(
-              label: 'UPI ID for Commission Payouts',
-              hint: 'e.g. yourname@oksbi',
-              icon: Icons.account_balance_wallet_rounded,
-              controller: _upiController,
+              label: 'PAN Number (required for payouts)',
+              hint: 'e.g. ABCDE1234F',
+              icon: Icons.badge_outlined,
+              controller: _panController,
             ),
             const SizedBox(height: 18),
 
@@ -339,7 +376,7 @@ class _BecomeInfluencerPromoterScreenState
                 Checkbox(
                   value: _agreedToTerms,
                   activeColor: const Color(0xFFE11D48),
-                  onChanged: (val) => setState(() => _agreedToTerms = val ?? true),
+                  onChanged: (val) => setState(() => _agreedToTerms = val ?? false),
                 ),
                 Expanded(
                   child: Padding(

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../services/milo_auth_service.dart';
 import '../../services/milo_session_service.dart';
 import '../../theme/milo_theme.dart';
+import 'bms_list_your_show_portal_screen.dart';
 import 'organizer_dashboard_screen.dart';
 
 class ListYourShowScreen extends StatefulWidget {
@@ -22,30 +22,14 @@ class _ListYourShowScreenState extends State<ListYourShowScreen> {
  if (_activating) return;
  setState(() => _activating = true);
 
- final error = await MiloAuthService.instance.upgradeRole(MiloRole.organizer);
+ await Future<void>.delayed(const Duration(milliseconds: 150));
 
  if (!mounted) return;
  setState(() => _activating = false);
 
- if (error != null) {
- ScaffoldMessenger.of(context).showSnackBar(SnackBar(
- backgroundColor: MiloColors.bgSurface,
- content: Text(error, style: GoogleFonts.inter(color: MiloColors.rose, fontWeight: FontWeight.w700)),
- ));
- return;
- }
-
- ScaffoldMessenger.of(context).showSnackBar(SnackBar(
- backgroundColor: MiloColors.bgSurface,
- content: Text(
- 'Organizer account activated! Open your dashboard to host events. ',
- style: GoogleFonts.inter(color: MiloColors.emerald, fontWeight: FontWeight.w700, fontSize: 12),
- ),
- ));
-
- Navigator.pushReplacement(
+ Navigator.push(
  context,
- MaterialPageRoute(builder: (_) => const OrganizerDashboardScreen()),
+ MaterialPageRoute(builder: (_) => const BMSListYourShowPortalScreen()),
  );
  }
 
@@ -100,7 +84,7 @@ class _ListYourShowScreenState extends State<ListYourShowScreen> {
  const SizedBox(height: 24),
  _sectionTitle('How it works '),
  const SizedBox(height: 12),
- _step(1, 'Create your organizer account', 'One tap — your customer account upgrades to a host account.'),
+ _step(1, 'Complete organizer verification', 'PAN, business email and bank account checks are done by Milo KYC before hosting.'),
  _step(2, 'List your show', 'Add title, venue, date and tiered ticket pricing.'),
  _step(3, 'Add your gate staff', 'Assign staff and hand them their unique gate passcode.'),
  _step(4, 'Go live & get paid', 'Track sales in real time and receive settlements.'),

@@ -88,9 +88,9 @@ class _BMSPhoneLoginScreenState extends State<BMSPhoneLoginScreen> {
  final credential = await MiloAuthService.instance.signInWithGoogle();
  if (!mounted) return;
  setState(() => _isLoading = false);
- if (credential != null && credential.user != null) {
- LoginRouter.go(context, MiloRole.customer);
- }
+  if (credential != null && credential.user != null) {
+  await _afterSignedIn(credential.user!.phoneNumber ?? '');
+  }
  } catch (e) {
  if (!mounted) return;
  setState(() => _isLoading = false);
@@ -103,29 +103,21 @@ class _BMSPhoneLoginScreenState extends State<BMSPhoneLoginScreen> {
  }
  }
 
- Future<void> _afterSignedIn(String phone) async {
- if (!mounted) return;
- final uid = MiloAuthService.instance.currentUser?.uid ?? 'cust_${DateTime.now().millisecondsSinceEpoch}';
- await MiloSessionService.saveLoginSession(
- role: MiloRole.customer,
- name: 'Sahil',
- phone: phone,
- uid: uid,
- );
- try {
- if (MiloAuthService.instance.currentUser != null) {
- await MiloAuthService.instance.saveProfile(
- name: 'Sahil',
- phone: phone,
- age: 23,
- city: 'Lucknow',
- role: MiloRole.customer,
- );
- }
- } catch (_) {}
- if (!mounted) return;
- LoginRouter.go(context, MiloRole.customer);
- }
+  Future<void> _afterSignedIn(String phone) async {
+  if (!mounted) return;
+  final hasProfile = await MiloAuthService.instance.hasProfile();
+  if (!mounted) return;
+  if (hasProfile) {
+  await MiloAuthService.instance.restoreSession();
+  if (!mounted) return;
+  LoginRouter.go(context, MiloSessionService.currentRoleNotifier.value);
+  return;
+  }
+  Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (context) => ProfileSetupScreen(phoneNumber: phone)),
+  );
+  }
 
  @override
  Widget build(BuildContext context) {

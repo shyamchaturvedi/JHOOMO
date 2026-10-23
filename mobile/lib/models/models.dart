@@ -44,6 +44,8 @@ class EventModel {
  this.customTermsAndConditions = '',
  this.autoReminder30Min = true,
  });
+
+  int get confirmedAttendeesCount => (startingPrice * 0.4).toInt() + 120;
 }
 
 class OrganizerCoupon {
