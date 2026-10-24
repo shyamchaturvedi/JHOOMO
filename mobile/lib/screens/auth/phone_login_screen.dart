@@ -84,7 +84,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
  }
  }
 
- Future<void> _afterSignedIn(String phone) async {
+   Future<void> _afterSignedIn(String phone) async {
     if (!mounted) return;
     final auth = MiloAuthService.instance;
     final hasProfile = await auth.hasProfile();
@@ -94,11 +94,11 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       await auth.restoreSession();
     } else {
       final defaultName = 'JHOOMO User';
-      final uid = auth.uid.isNotEmpty ? auth.uid : 'usr_${DateTime.now().millisecondsSinceEpoch}';
+      final uid = auth.uid.isNotEmpty ? auth.uid : 'usr_' + DateTime.now().millisecondsSinceEpoch.toString();
       await MiloSessionService.saveLoginSession(
         role: MiloRole.customer,
         name: defaultName,
-        phone: phone.startsWith('+') ? phone : '+91 $phone',
+        phone: phone.startsWith('+') ? phone : '+91 ' + phone,
         uid: uid,
       );
       auth.saveProfile(
@@ -113,9 +113,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     if (!mounted) return;
     LoginRouter.go(context, MiloRole.customer);
   }
- }
 
- @override
+  @override
  Widget build(BuildContext context) {
  return Scaffold(
  backgroundColor: MiloColors.bg,
