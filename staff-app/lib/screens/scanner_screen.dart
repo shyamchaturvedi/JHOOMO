@@ -5,6 +5,7 @@ import '../theme/scanner_tokens.dart';
 import '../services/staff_auth_service.dart';
 import '../services/gate_scan_service.dart';
 import 'login_screen.dart';
+import 'session_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
   final StaffAuthSession session;
@@ -382,6 +383,18 @@ class _ScannerScreenState extends State<ScannerScreen> {
                           ),
                         ),
                         if (!_isScreenLocked) ...[
+                          const SizedBox(width: 8),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => SessionInfoScreen(session: widget.session),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.info_outline, color: Colors.white),
+                            style: IconButton.styleFrom(backgroundColor: Colors.black54),
+                          ),
                           const SizedBox(width: 8),
                           IconButton(
                             onPressed: () async {
