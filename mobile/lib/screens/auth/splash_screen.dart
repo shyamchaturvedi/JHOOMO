@@ -10,319 +10,350 @@ import '../../services/payment_approval_service.dart';
 import 'login_router.dart';
 
 class SplashScreen extends StatefulWidget {
- const SplashScreen({super.key});
+  const SplashScreen({super.key});
 
- @override
- State<SplashScreen> createState() => _SplashScreenState();
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
- late AnimationController _logoController;
- late Animation<double> _logoScale;
- late Animation<double> _logoOpacity;
- late Animation<double> _taglineSlide;
- late Animation<double> _taglineOpacity;
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animController;
+  late final Animation<double> _badgeScale;
+  late final Animation<double> _badgeOpacity;
+  late final Animation<double> _textSlide;
+  late final Animation<double> _textOpacity;
+  late final Animation<double> _glowScale;
+  late final Animation<double> _glowOpacity;
 
- late AnimationController _glowController;
- late Animation<double> _glowRadius;
- late Animation<double> _sonarRing;
- late Animation<double> _sonarOpacity;
+  bool _initDone = false;
+  bool _minAnimationDone = false;
 
- @override
- void initState() {
- super.initState();
+  @override
+  void initState() {
+    super.initState();
 
- // 1. Logo scale & entrance choreography
- _logoController = AnimationController(
- vsync: this,
- duration: const Duration(milliseconds: 1400),
- );
+    // Single unified 60fps hardware-accelerated animation controller
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
 
- _logoScale = Tween<double>(begin: 0.82, end: 1.0).animate(
- CurvedAnimation(parent: _logoController, curve: Curves.easeOutBack),
- );
+    // 1. Icon badge elastic entrance
+    _badgeScale = Tween<double>(begin: 0.65, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.0, 0.65, curve: Curves.easeOutBack),
+      ),
+    );
 
- _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
- CurvedAnimation(parent: _logoController, curve: const Interval(0.0, 0.6, curve: Curves.easeIn)),
- );
+    _badgeOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.0, 0.40, curve: Curves.easeIn),
+      ),
+    );
 
- _taglineSlide = Tween<double>(begin: 18.0, end: 0.0).animate(
- CurvedAnimation(parent: _logoController, curve: const Interval(0.5, 1.0, curve: Curves.easeOutCubic)),
- );
+    // 2. Soft pulsing brand ambient aura
+    _glowScale = Tween<double>(begin: 0.8, end: 1.25).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.2, 0.85, curve: Curves.easeOutQuad),
+      ),
+    );
 
- _taglineOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
- CurvedAnimation(parent: _logoController, curve: const Interval(0.5, 0.95, curve: Curves.easeIn)),
- );
+    _glowOpacity = Tween<double>(begin: 0.0, end: 0.35).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.1, 0.55, curve: Curves.easeIn),
+      ),
+    );
 
- // 2. Ambient ambient sonar pulse
- _glowController = AnimationController(
- vsync: this,
- duration: const Duration(milliseconds: 2200),
- )..repeat();
+    // 3. Text entrance with smooth upward glide
+    _textSlide = Tween<double>(begin: 22.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.40, 0.90, curve: Curves.easeOutCubic),
+      ),
+    );
 
- _glowRadius = Tween<double>(begin: 0.9, end: 1.25).animate(
- CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
- );
+    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.45, 0.85, curve: Curves.easeIn),
+      ),
+    );
 
- _sonarRing = Tween<double>(begin: 0.8, end: 2.1).animate(
- CurvedAnimation(parent: _glowController, curve: Curves.easeOutQuad),
- );
+    _animController.forward().then((_) {
+      _minAnimationDone = true;
+      _tryNavigate();
+    });
 
- _sonarOpacity = Tween<double>(begin: 0.45, end: 0.0).animate(
- CurvedAnimation(parent: _glowController, curve: Curves.easeOutQuad),
- );
+    _startBackgroundInit();
+  }
 
- _logoController.forward();
- _navigateNext();
- }
+  /// Run initialization completely in background without blocking frame rasterization
+  Future<void> _startBackgroundInit() async {
+    try {
+      await MiloSessionService.initSession();
+      MiloDbService.instance.ensureSeeded();
+      PaymentApprovalService.instance.init();
 
- Future<void> _navigateNext() async {
- await Future.delayed(const Duration(milliseconds: 2400));
- await MiloSessionService.initSession();
+      if (!MiloSessionService.isLoggedInNotifier.value) {
+        await MiloAuthService.instance.restoreSession();
+      } else {
+        final role = await MiloAuthService.instance.fetchRole();
+        if (role != null &&
+            role != MiloSessionService.currentRoleNotifier.value) {
+          await MiloSessionService.updateRole(role);
+        }
+      }
+    } catch (e) {
+      debugPrint('Background init note: $e');
+    } finally {
+      _initDone = true;
+      if (mounted) _tryNavigate();
+    }
+  }
 
- MiloDbService.instance.ensureSeeded();
- PaymentApprovalService.instance.init();
+  void _tryNavigate() {
+    if (!_initDone || !_minAnimationDone || !mounted) return;
 
- try {
- if (!MiloSessionService.isLoggedInNotifier.value) {
- await MiloAuthService.instance.restoreSession();
- } else {
- final role = await MiloAuthService.instance.fetchRole();
- if (role != null && role != MiloSessionService.currentRoleNotifier.value) {
- await MiloSessionService.updateRole(role);
- }
- }
- } catch (e) {
- debugPrint('Splash Firebase restore note: $e');
- }
+    final target = MiloSessionService.isLoggedInNotifier.value
+        ? LoginRouter.targetForRole(
+            MiloSessionService.currentRoleNotifier.value)
+        : const OnboardingScreen();
 
- if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 650),
+        pageBuilder: (_, animation, secondaryAnimation) => FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutCubic,
+          ),
+          child: target,
+        ),
+      ),
+    );
+  }
 
- if (MiloSessionService.isLoggedInNotifier.value) {
- Navigator.pushReplacement(
- context,
- PageRouteBuilder(
- transitionDuration: const Duration(milliseconds: 550),
- pageBuilder: (_, animation, __) => FadeTransition(
- opacity: animation,
- child: LoginRouter.targetForRole(MiloSessionService.currentRoleNotifier.value),
- ),
- ),
- );
- } else {
- Navigator.pushReplacement(
- context,
- PageRouteBuilder(
- transitionDuration: const Duration(milliseconds: 550),
- pageBuilder: (_, animation, __) => FadeTransition(
- opacity: animation,
- child: const OnboardingScreen(),
- ),
- ),
- );
- }
- }
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
 
- @override
- void dispose() {
- _logoController.dispose();
- _glowController.dispose();
- super.dispose();
- }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // 1. Soft Warm Ambient Radial Backdrop
+          Positioned(
+            top: -100,
+            left: -50,
+            right: -50,
+            height: 480,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0, -0.3),
+                  radius: 0.9,
+                  colors: [
+                    const Color(0xFFFFE4EB).withValues(alpha: 0.65),
+                    const Color(0xFFFFF0F5).withValues(alpha: 0.35),
+                    Colors.white.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
 
- @override
- Widget build(BuildContext context) {
- return Scaffold(
- backgroundColor: Colors.white,
- body: Stack(
- fit: StackFit.expand,
- children: [
- // Soft Top Ambient Blush Gradient 
- Positioned(
- top: 0,
- left: 0,
- right: 0,
- height: 380,
- child: Container(
- decoration: const BoxDecoration(
- gradient: LinearGradient(
- colors: [
- Color(0xFFFFEEF2),
- Color(0xFFFFF7F9),
- Colors.white,
- ],
- begin: Alignment.topCenter,
- end: Alignment.bottomCenter,
- ),
- ),
- ),
- ),
+          // 2. Animated Centerpiece: Aura + Badge + Typography
+          Center(
+            child: AnimatedBuilder(
+              animation: _animController,
+              builder: (context, _) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Badge Container with dynamic breathing aura
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Soft diffused aura bloom
+                        Transform.scale(
+                          scale: _glowScale.value,
+                          child: Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: JhoomoTokens.primary.withValues(
+                                    alpha: _glowOpacity.value,
+                                  ),
+                                  blurRadius: 55,
+                                  spreadRadius: 15,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
 
- // Centered Breathing Sonar Ring & Logo 
- Center(
- child: Column(
- mainAxisSize: MainAxisSize.min,
- children: [
- AnimatedBuilder(
- animation: Listenable.merge([_logoController, _glowController]),
- builder: (context, _) {
- return Stack(
- alignment: Alignment.center,
- children: [
- // Sonar ring
- Container(
- width: 140 * _sonarRing.value,
- height: 140 * _sonarRing.value,
- decoration: BoxDecoration(
- shape: BoxShape.circle,
- border: Border.all(
- color: JhoomoTokens.primary.withValues(alpha: _sonarOpacity.value),
- width: 1.5,
- ),
- ),
- ),
+                        // Logo Badge with 3D drop shadow
+                        Transform.scale(
+                          scale: _badgeScale.value,
+                          child: Opacity(
+                            opacity: _badgeOpacity.value,
+                            child: Container(
+                              width: 112,
+                              height: 112,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(32),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: JhoomoTokens.primary
+                                        .withValues(alpha: 0.32),
+                                    blurRadius: 30,
+                                    offset: const Offset(0, 12),
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(0xFFFF6A00)
+                                        .withValues(alpha: 0.18),
+                                    blurRadius: 22,
+                                    offset: const Offset(4, 6),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(32),
+                                child: Image.asset(
+                                  'assets/icons/jhoomo_clean_badge.png',
+                                  width: 112,
+                                  height: 112,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Image.asset(
+                                    'assets/icons/jhoomo_app_icon.png',
+                                    width: 112,
+                                    height: 112,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
 
- // Soft Ambient Glow
- Container(
- width: 120 * _glowRadius.value,
- height: 120 * _glowRadius.value,
- decoration: BoxDecoration(
- shape: BoxShape.circle,
- boxShadow: [
- BoxShadow(
- color: JhoomoTokens.primary.withValues(alpha: 0.22),
- blurRadius: 40,
- spreadRadius: 8,
- ),
- ],
- ),
- ),
+                    const SizedBox(height: 32),
 
- // 3D App Icon Badge
- Transform.scale(
- scale: _logoScale.value,
- child: Opacity(
- opacity: _logoOpacity.value,
- child: Container(
- width: 110,
- height: 110,
- decoration: BoxDecoration(
- borderRadius: BorderRadius.circular(30),
- boxShadow: [
- BoxShadow(
- color: JhoomoTokens.primary.withValues(alpha: 0.38),
- blurRadius: 28,
- offset: const Offset(0, 10),
- ),
- BoxShadow(
- color: const Color(0xFFFF6A00).withValues(alpha: 0.25),
- blurRadius: 20,
- offset: const Offset(4, 4),
- ),
- ],
- ),
- child: ClipRRect(
- borderRadius: BorderRadius.circular(30),
- child: Image.asset(
- 'assets/icons/jhoomo_clean_badge.png',
- width: 110,
- height: 110,
- fit: BoxFit.cover,
- errorBuilder: (_, __, ___) => Image.asset(
- 'assets/icons/jhoomo_app_icon.png',
- width: 110,
- height: 110,
- fit: BoxFit.cover,
- ),
- ),
- ),
- ),
- ),
- ),
- ],
- );
- },
- ),
- const SizedBox(height: 28),
+                    // Brand Typography & Tagline
+                    Opacity(
+                      opacity: _textOpacity.value,
+                      child: Transform.translate(
+                        offset: Offset(0, _textSlide.value),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Jhoo',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 38,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF0F172A),
+                                    letterSpacing: -1.2,
+                                  ),
+                                ),
+                                Text(
+                                  'mo',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 38,
+                                    fontWeight: FontWeight.w900,
+                                    color: JhoomoTokens.primary,
+                                    letterSpacing: -1.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Text(
+                                'Events • Squads • Memories',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF64748B),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
 
- // Animated Brand Wordmark & Tagline 
- AnimatedBuilder(
- animation: _logoController,
- builder: (context, _) {
- return Opacity(
- opacity: _taglineOpacity.value,
- child: Transform.translate(
- offset: Offset(0, _taglineSlide.value),
- child: Column(
- children: [
- Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(
- 'Jhoo',
- style: GoogleFonts.inter(
- fontSize: 34,
- fontWeight: FontWeight.w900,
- color: const Color(0xFF0F172A),
- letterSpacing: -1.2,
- ),
- ),
- Text(
- 'mo',
- style: GoogleFonts.inter(
- fontSize: 34,
- fontWeight: FontWeight.w900,
- color: JhoomoTokens.primary,
- letterSpacing: -1.2,
- ),
- ),
- ],
- ),
- const SizedBox(height: 6),
- Text(
- 'Milna Aasaan • Pal Yaadgaar • Data Aapka',
- style: GoogleFonts.inter(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: const Color(0xFF64748B),
- letterSpacing: 0.3,
- ),
- ),
- ],
- ),
- ),
- );
- },
- ),
- ],
- ),
- ),
-
- // Bottom Powered by Enterprise Security Label 
- Positioned(
- bottom: 34,
- left: 0,
- right: 0,
- child: Center(
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- const Icon(Icons.shield_outlined, size: 14, color: Color(0xFF94A3B8)),
- const SizedBox(width: 5),
- Text(
-  'Protected by Jhoomo SafePay & Privacy Shield',
- style: GoogleFonts.inter(
- fontSize: 11,
- fontWeight: FontWeight.w500,
- color: const Color(0xFF94A3B8),
- ),
- ),
- ],
- ),
- ),
- ),
- ],
- ),
- );
- }
+          // 3. Bottom Trust & Security Pill
+          Positioned(
+            bottom: 36,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFEEF2F6),
+                    width: 0.8,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.verified_user_rounded,
+                        size: 13, color: Color(0xFF10B981)),
+                    const SizedBox(width: 6),
+                    Text(
+                      '100% Consent-First & Verified Booking',
+                      style: GoogleFonts.inter(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
