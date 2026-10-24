@@ -180,71 +180,51 @@ class MiloDbService {
   }
 
  /// Fetch Live Events from Firestore
- Future<List<EventModel>> getEvents({String? city, String? category}) async {
- final db = _db;
- if (db != null) {
- try {
- await ensureSeeded();
- Query<Map<String, dynamic>> query = db
- .collection('events')
- .where('status', isEqualTo: 'live');
+ /// Fetch Live Events from Firestore
+  Future<List<EventModel>> getEvents({String? city, String? category}) async {
+    final db = _db;
+    if (db != null) {
+      try {
+        await ensureSeeded();
+        final snapshot = await db.collection('events').get();
+        if (snapshot.docs.isNotEmpty) {
+          final liveDocs = snapshot.docs.where((d) {
+            final data = d.data();
+            final st = (data['status'] ?? 'live').toString().toLowerCase();
+            return st == 'live' || st == 'active';
+          }).toList();
 
- if (city != null && city != 'All Cities' && city != 'All') {
- query = query.where('city', isEqualTo: city);
- }
- if (category != null && category != 'All' && category != 'All Categories') {
- query = query.where('category', isEqualTo: category);
- }
+          final docsToUse = liveDocs.isNotEmpty ? liveDocs : snapshot.docs;
 
- // Equality-only filters (no orderBy) avoid the need for composite
- // indexes; sorting happens client-side below.
- final snapshot = await query.get();
- if (snapshot.docs.isNotEmpty) {
- return _sortedByCreatedDesc(snapshot.docs.map((doc) {
- final data = doc.data();
- data['document_id'] = doc.id;
- return mapEventDoc(data);
- }).toList(), snapshot.docs);
- }
- // Server-side filters can return empty on partial indexes — retry plain query.
- final plain = await db.collection('events').get();
- final liveDocs = plain.docs.where((d) => d.data()['status'] == 'live').toList();
- if (liveDocs.isNotEmpty) {
- final filtered = liveDocs.where((d) {
- final data = d.data();
- if (city != null && city != 'All Cities' && city != 'All' && data['city'] != city) {
- return false;
- }
- if (category != null && category != 'All' && category != 'All Categories' && data['category'] != category) {
- return false;
- }
- return true;
- }).toList();
- final rows = filtered.map((d) {
- final data = d.data();
- data['document_id'] = d.id;
- return mapEventDoc(data);
- }).toList();
- if (rows.isNotEmpty) return rows;
- }
- } catch (e) {
- debugPrint('MiloDb Live Events Note: $e');
- // Last resort: plain read + client-side filter (needs no indexes).
- try {
- final plain = await db.collection('events').get();
- final rows = plain.docs.where((d) => d.data()['status'] == 'live').map((d) {
- final data = d.data();
- data['document_id'] = d.id;
- return mapEventDoc(data);
- }).toList();
- if (rows.isNotEmpty) return rows;
- } catch (e2) {
- debugPrint('MiloDb plain events fallback note: $e2');
- }
- }
- }
- return [];
- }
+          final filtered = docsToUse.where((d) {
+            final data = d.data();
+            if (city != null && city != 'All Cities' && city != 'All') {
+              final c = (data['city'] ?? '').toString().toLowerCase();
+              final targetCity = city.toLowerCase().replaceAll('-ncr', '').trim();
+              if (!c.contains(targetCity) && !targetCity.contains(c)) {
+                return false;
+              }
+            }
+            if (category != null && category != 'All' && category != 'All Categories') {
+              if (data['category'] != category) return false;
+            }
+            return true;
+          }).toList();
+
+          final rows = (filtered.isNotEmpty ? filtered : docsToUse).map((d) {
+            final data = d.data();
+            data['document_id'] = d.id;
+            return mapEventDoc(data);
+          }).toList();
+
+          if (rows.isNotEmpty) return rows;
+        }
+      } catch (e) {
+        debugPrint('MiloDb getEvents error: $e');
+      }
+    }
+    return [];
+  }
 
  List<EventModel> _sortedByCreatedDesc(List<EventModel> events, List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
  final order = <String, int>{};

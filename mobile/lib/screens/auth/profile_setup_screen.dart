@@ -65,7 +65,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
  ' Startups & Tech',
  ];
 
- final List<String> _cities = ['Lucknow', 'Ahmedabad', 'Bangalore', 'Mumbai', 'Delhi', 'Jaipur'];
+ final List<String> _cities = ['Lucknow', 'Kanpur', 'Agra', 'Delhi', 'Mumbai'];
 
  @override
  Widget build(BuildContext context) {
