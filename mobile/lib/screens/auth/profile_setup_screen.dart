@@ -246,73 +246,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
  );
  }).toList(),
  ),
-  // Role access is server-verified. Debug builds may preview roles locally.
-  if (kDebugMode) ...[
-  const SizedBox(height: 20),
-  Text('Preview Account Role (Debug)', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: MiloColors.textPrimary)),
-  const SizedBox(height: 6),
-  Text('Release builds always start as an attendee.', style: GoogleFonts.inter(fontSize: 12, color: MiloColors.textMuted)),
-  const SizedBox(height: 12),
-  _buildRoleOption(
-  role: MiloUserRole.customer,
-  title: 'Attendee / Customer ',
-  subtitle: 'Discover shows, book passes, connect with people & enter events',
-  badge: 'DEFAULT',
-  ),
-  const SizedBox(height: 8),
-  _buildRoleOption(
-  role: MiloUserRole.organizer,
-  title: 'Event Organizer / Host ',
-  subtitle: 'Publish Dandiya/Concerts, manage ticket tiers, view sales & RSVPs',
-  badge: 'CREATOR',
-  ),
-  const SizedBox(height: 8),
-  _buildRoleOption(
-  role: MiloUserRole.promoter,
-  title: 'Influencer & Promoter ',
-  subtitle: 'Share event links, track exact ticket sales & earn 10% cash commission',
-  badge: 'ATTRIBUTION',
-  ),
-  const SizedBox(height: 8),
-  _buildRoleOption(
-  role: MiloUserRole.staff,
-  title: 'Security / Event Staff ',
-  subtitle: 'Fast QR entry scanner, gate cash collection & attendance lookup',
-  badge: 'OPERATIONS',
-  ),
-  const SizedBox(height: 8),
-  _buildRoleOption(
-  role: MiloUserRole.admin,
-  title: 'Super Admin Central ',
-  subtitle: _isAdminAllowed
-  ? 'Platform analytics, moderation, fraud control & payouts'
-  : 'Invite only — admin access is granted by Jhoomo operations',
-  badge: _isAdminAllowed ? 'GOVERNANCE' : 'LOCKED',
-  ),
-  ] else ...[
-  const SizedBox(height: 20),
-  Container(
-  padding: const EdgeInsets.all(14),
-  decoration: BoxDecoration(
-  color: MiloColors.bgSurface,
-  borderRadius: BorderRadius.circular(16),
-  border: Border.all(color: MiloColors.glassBorder),
-  ),
-  child: Row(
-  children: [
-  const Icon(Icons.verified_user_outlined, color: MiloColors.primaryLight, size: 22),
-  const SizedBox(width: 12),
-  Expanded(
-  child: Text(
-  'Your account starts as an attendee. Organizer and promoter access unlock after KYC or application approval.',
-  style: GoogleFonts.inter(fontSize: 12, color: MiloColors.textSecondary, height: 1.4),
-  ),
-  ),
-  ],
-  ),
-  ),
-  ],
-  const SizedBox(height: 32),
+  const SizedBox(height: 24),
 
  // Finish Setup Button
  SizedBox(
