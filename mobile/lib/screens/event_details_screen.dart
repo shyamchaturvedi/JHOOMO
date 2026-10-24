@@ -997,6 +997,234 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   ),
                   const SizedBox(height: 14),
 
+                  // ── 1. SPOTLIGHT: WHY THIS EVENT STANDS OUT ──
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 18),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF2A2415),
+                          const Color(0xFF16161D),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFE5A93C).withValues(alpha: 0.35)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE5A93C).withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFE5A93C), size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Why this event stands out',
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFFE5A93C),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                event.highlights.isNotEmpty
+                                    ? event.highlights.first
+                                    : 'An Unforgettable Live Multi-Day Festival & Arena Experience in ${event.city}!',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ── 2. DAY 1 & DAY 2 LINEUP (RICH HORIZONTAL CAROUSELS) ──
+                  _buildDayLineupSection(
+                    dayTitle: 'Day 1 – Lineup',
+                    artists: [
+                      {
+                        'name': 'DIVINE / Gully Gang',
+                        'role': 'Hip-Hop Headliner',
+                        'image': 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80',
+                      },
+                      {
+                        'name': 'Karan Kanchan',
+                        'role': 'Music Producer & DJ',
+                        'image': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+                      },
+                      {
+                        'name': 'MC Altaf',
+                        'role': 'Rapper / Lyricist',
+                        'image': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+                      },
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDayLineupSection(
+                    dayTitle: 'Day 2 – Lineup',
+                    artists: [
+                      {
+                        'name': 'Sunidhi Chauhan',
+                        'role': 'Bollywood Superstar',
+                        'image': 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=400&q=80',
+                      },
+                      {
+                        'name': 'Prateek Kuhad',
+                        'role': 'Indie / Singer-Songwriter',
+                        'image': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+                      },
+                      {
+                        'name': 'When Chai Met Toast',
+                        'role': 'Indie Folk Band',
+                        'image': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+                      },
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+
+                  // ── 3. FACILITIES AT THE EVENT (ICON GRID WITH SUBTITLES) ──
+                  Text(
+                    'Facilities at the event',
+                    style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: MiloColors.bgSurface.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: MiloColors.glassBorder),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildFacilityRow(
+                          icon: Icons.local_parking_rounded,
+                          title: 'Paid parking available',
+                          subtitle: 'Ample multi-level car and bike parking on-site.',
+                        ),
+                        const Divider(color: MiloColors.border, height: 20),
+                        _buildFacilityRow(
+                          icon: Icons.fastfood_rounded,
+                          title: 'Food and drinks can be purchased',
+                          subtitle: 'Veg and non-veg options with curated food stalls & hydration points.',
+                        ),
+                        const Divider(color: MiloColors.border, height: 20),
+                        _buildFacilityRow(
+                          icon: Icons.accessible_rounded,
+                          title: 'Fully wheelchair accessible',
+                          subtitle: 'Dedicated ramps & elevators for companion and wheelchair access.',
+                        ),
+                        const Divider(color: MiloColors.border, height: 20),
+                        _buildFacilityRow(
+                          icon: Icons.medical_services_rounded,
+                          title: 'Medical support & First-aid with ambulance',
+                          subtitle: '24/7 Paramedic squad on-site with rapid-response ambulance.',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+
+                  // ── 4. THINGS TO KNOW (CLEAN BULLET RULES BOX) ──
+                  Text(
+                    'Things to know',
+                    style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: MiloColors.bgSurface.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: MiloColors.glassBorder),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildRuleBullet('Entry strictly allowed for ages 8 and above.'),
+                        _buildRuleBullet('Ticket required for ages 8 and above.'),
+                        _buildRuleBullet('Outside food, beverages, and pets are not allowed.'),
+                        _buildRuleBullet('Valid Government ID (Aadhaar / PAN / Passport) required for entry.'),
+                        _buildRuleBullet('Allowed dress code: Smart Casuals & comfortable footwear.'),
+                        _buildRuleBullet('Outdoor festival arena with standing zones; VIP lounge has seated tables.'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+
+                  // ── 5. ORGANISED BY (RICH VERIFIED HOST CARD) ──
+                  Text(
+                    'Organised by',
+                    style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: MiloColors.bgSurface.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: MiloColors.glassBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: MiloColors.primary.withValues(alpha: 0.2),
+                          child: const Icon(Icons.business_center_rounded, color: MiloColors.primaryLight, size: 28),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      event.organizerName.isNotEmpty ? event.organizerName : 'Antimbre Private Limited',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w800,
+                                        color: MiloColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.verified_rounded, color: MiloColors.emerald, size: 16),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Official Partner • 4.9 ★ Rating • 18+ Live Shows Hosted',
+                                style: GoogleFonts.inter(fontSize: 11, color: MiloColors.textMuted),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+
                   // 30-Min Auto Reminder Indicator Card
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -1640,4 +1868,149 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       ),
     );
   }
+  Widget _buildDayLineupSection({required String dayTitle, required List<Map<String, String>> artists}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              dayTitle,
+              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
+            ),
+            Text(
+              'Explore full lineup ›',
+              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: MiloColors.primaryLight),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 210,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: artists.length,
+            itemBuilder: (context, idx) {
+              final a = artists[idx];
+              return Container(
+                width: 150,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: MiloColors.bgSurface,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: MiloColors.glassBorder),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(17)),
+                      child: Stack(
+                        children: [
+                          Image.network(
+                            a['image']!,
+                            height: 140,
+                            width: 150,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(height: 140, color: MiloColors.bgCard),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.6),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.bookmark_border_rounded, color: Colors.white, size: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            a['name']!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            a['role']!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(fontSize: 10, color: MiloColors.textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFacilityRow({required IconData icon, required String title, required String subtitle}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: MiloColors.primary.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: MiloColors.primaryLight, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: MiloColors.textPrimary),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(fontSize: 11, color: MiloColors.textMuted, height: 1.3),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRuleBullet(String rule) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ', style: TextStyle(color: MiloColors.primaryLight, fontSize: 14, fontWeight: FontWeight.bold)),
+          Expanded(
+            child: Text(
+              rule,
+              style: GoogleFonts.inter(fontSize: 12, color: MiloColors.textSecondary, height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
