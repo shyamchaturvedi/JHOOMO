@@ -202,10 +202,35 @@ class PaymentApprovalService extends ChangeNotifier {
   }
 
   BookedTicket _demoPendingTicket() {
+    const demoTier = TicketTier(
+      id: 'tier_ga',
+      name: 'General Admission',
+      price: 928,
+      currency: 'INR',
+      availableApprox: 100,
+      totalCapacity: 200,
+      soldOut: false,
+    );
+    const demoEvent = EventModel(
+      id: 'ev_lucknow',
+      title: 'Sunidhi Chauhan Live in Concert - Lucknow',
+      category: 'Concert',
+      date: 'Sat, 14 Nov',
+      time: '07:00 PM',
+      venue: 'Ekana International Stadium',
+      city: 'Lucknow',
+      startingPrice: 999,
+      imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+      organizerName: 'JHOOMO Live',
+      tags: ['Music', 'Concert'],
+      ticketsLeft: 120,
+      description: 'Sunidhi Chauhan live at Ekana Stadium',
+      ticketTiers: [demoTier],
+    );
     return BookedTicket(
       bookingId: 'JHOOMO-SELF-PAY-9842',
-      event: null,
-      tier: null,
+      event: demoEvent,
+      tier: demoTier,
       quantity: 1,
       totalAmount: 928,
       bookingTime: 'Today, 03:45 PM',
