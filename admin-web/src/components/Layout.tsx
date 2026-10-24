@@ -28,10 +28,10 @@ export function Layout() {
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
-          <span className="brand-mark">M</span>
+          <span className="brand-mark" style={{ background: '#E11D48', color: '#fff' }}>JH</span>
           <div>
-            <strong>Milo Console</strong>
-            <small>Super Admin</small>
+            <strong style={{ letterSpacing: '0.5px' }}>JHOOMO Admin</strong>
+            <small>Operations Console</small>
           </div>
         </div>
         <nav>
