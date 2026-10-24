@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/milo_theme.dart';
-import '../services/milo_auth_service.dart';
 import '../services/milo_api.dart';
 import '../services/milo_session_service.dart';
 
