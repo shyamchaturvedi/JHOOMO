@@ -1,0 +1,13 @@
+﻿[
+  {
+    \\"relation\\": [\\"delegate_permission/common.handle_all_urls\\"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.jhoomo.jhoomo_mobile",
+      "sha256_cert_fingerprints": [
+        "8B:D6:B6:86:99:A0:CE:CE:62:10:81:FF:14:C0:D8:C3:5C:85:F9:03:BE:6D:E7:A4:68:4C:FA:1B:5C:FC:E8:88",
+        "FE:65:09:12:46:7B:6C:4E:6F:41:00:F8:57:18:4A:35:DB:5F:71:C2:71:4B:F3:38:ED:EE:6E:AD:DC:DE:1F:43"
+      ]
+    }
+  }
+]
