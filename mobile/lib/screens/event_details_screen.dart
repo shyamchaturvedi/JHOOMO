@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
 import '../config.dart';
@@ -636,14 +637,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   child: const Icon(Icons.share_outlined, color: MiloColors.textPrimary, size: 18),
                 ),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: MiloColors.bgSurface,
-                      content: Text(
-                        '✨ Jhoomo Event Shared: "Hey! Let\'s attend ${event.title} at ${event.venue}. Meet up with the squad on Jhoomo: ${MiloConfig.eventLink(event.id)}" 🎟️',
-                        style: GoogleFonts.inter(color: MiloColors.primaryLight),
-                      ),
-                    ),
+                  final shareUrl = MiloConfig.eventLink(event.id);
+                  final shareText =
+                      'Hey! Check out "${event.title}" at ${event.venue}.\n\nBook your verified tickets & join the squad on JHOOMO:\n$shareUrl';
+                  Share.share(
+                    shareText,
+                    subject: 'Tickets for ${event.title} on JHOOMO',
                   );
                 },
               ),
