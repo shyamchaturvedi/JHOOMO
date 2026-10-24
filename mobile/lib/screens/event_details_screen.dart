@@ -640,7 +640,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     SnackBar(
                       backgroundColor: MiloColors.bgSurface,
                       content: Text(
-                        '✨ Milo Event Shared: "Hey! Let\'s attend ${event.title} at ${event.venue}. Meet up with the squad on Milo: ${MiloConfig.eventLink(event.id)}" 🎟️',
+                        '✨ Jhoomo Event Shared: "Hey! Let\'s attend ${event.title} at ${event.venue}. Meet up with the squad on Jhoomo: ${MiloConfig.eventLink(event.id)}" 🎟️',
                         style: GoogleFonts.inter(color: MiloColors.primaryLight),
                       ),
                     ),
@@ -700,7 +700,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                 children: [
                                   const Icon(Icons.verified_rounded, color: MiloColors.emerald, size: 12),
                                   const SizedBox(width: 4),
-                                  Text('BMS Certified Partner', style: GoogleFonts.inter(color: MiloColors.emerald, fontSize: 10, fontWeight: FontWeight.w700)),
+                                  Text('JHOOMO Verified Partner', style: GoogleFonts.inter(color: MiloColors.emerald, fontSize: 10, fontWeight: FontWeight.w700)),
                                 ],
                               ),
                             ),
@@ -1012,7 +1012,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Automatic 30-Min Alert: Milo will notify you with the Google Maps route 30 mins before showtime! 🔔',
+                            'Automatic 30-Min Alert: Jhoomo will notify you with the Google Maps route 30 mins before showtime! 🔔',
                             style: GoogleFonts.inter(color: MiloColors.textSecondary, fontSize: 11, height: 1.3),
                           ),
                         ),
@@ -1526,7 +1526,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         Text(
                           event.customTermsAndConditions.isNotEmpty
                               ? event.customTermsAndConditions
-                              : '1. Entry strictly with Milo digital M-Ticket QR pass.\n2. Organizer reserves right of admission.\n3. Passes are non-refundable except in official event cancellations.\n4. Age restrictions and security checks apply at venue entrance.',
+                              : '1. Entry strictly with JHOOMO digital M-Ticket QR pass.\n2. Organizer reserves right of admission.\n3. Passes are non-refundable except in official event cancellations.\n4. Age restrictions and security checks apply at venue entrance.',
                           style: GoogleFonts.inter(color: MiloColors.textSecondary, fontSize: 12, height: 1.5),
                         ),
                       ],

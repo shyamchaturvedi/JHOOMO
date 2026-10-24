@@ -66,11 +66,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
  final List<OrganizerCoupon> _organizerCoupons = [];
 
-  // Creator & Affiliate Automation Settings
-  bool _enableAffiliateProgram = true;
-  bool _autoApproveCreators = true; // Auto-accept all creators so organizer doesn't need to approve repeatedly
-  final _affiliateDiscountCtrl = TextEditingController(text: '5'); // Default ₹5 or ₹20 set by host
-  final _affiliateCommissionCtrl = TextEditingController(text: '50'); // e.g. ₹50 commission per ticket
 
  final List<String> _categories = [
  'Dandiya/Garba',
@@ -297,7 +292,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
  ),
  const SizedBox(height: 2),
  Text(
- 'Milo will automatically send push notifications with live Google Maps route directions to all attendees 30 mins before start time.',
+  'Jhoomo will automatically send push notifications with live Google Maps route directions to all attendees 30 mins before start time.',
  style: GoogleFonts.inter(color: MiloColors.textSecondary, fontSize: 11, height: 1.3),
  ),
  ],
@@ -330,7 +325,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
  const Icon(Icons.event_seat_rounded, color: MiloColors.primaryLight, size: 20),
  const SizedBox(width: 8),
  Text(
- 'Seat & Tier Pricing (BMS Style)',
+ 'Seat & Tier Pricing',
  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
  ),
  ],
@@ -521,7 +516,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
  ),
  const SizedBox(height: 6),
  Text(
- 'You fund and control all discounts for your event. Milo platform does not issue ad-hoc coupons.',
+ 'You fund and control all discounts for your event. Jhoomo platform does not issue ad-hoc coupons.',
  style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11),
  ),
  const SizedBox(height: 14),
@@ -650,7 +645,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
  style: GoogleFonts.inter(color: MiloColors.textSecondary, fontSize: 11),
  children: [
  TextSpan(
- text: 'Milo Organizer Terms & Safety Responsibility Policy.',
+  text: 'Jhoomo Organizer Terms & Safety Responsibility Policy.',
  style: GoogleFonts.inter(color: MiloColors.primaryLight, fontWeight: FontWeight.w700, decoration: TextDecoration.underline),
  ),
  ],
@@ -720,7 +715,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
  final venue = _venueCtrl.text.trim();
  final description = _descCtrl.text.trim().isNotEmpty
  ? _descCtrl.text.trim()
- : 'Exclusive event hosted on Milo platform. Complete seating & category management by organizer.';
+ : 'Exclusive event hosted on Jhoomo platform. Complete seating & category management by organizer.';
  final organizerName =
  MiloSessionService.currentUserName.isNotEmpty ? MiloSessionService.currentUserName : 'Self-Hosted Event';
  final tierMaps = _customTicketTiers
@@ -799,7 +794,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  backgroundColor: MiloColors.bgSurface,
- content: Text('Could not reach Milo servers — event saved on this device only. Please retry later.',
+ content: Text('Could not reach Jhoomo servers — event saved on this device only. Please retry later.',
  style: GoogleFonts.inter(color: MiloColors.rose, fontWeight: FontWeight.w700)),
  ),
  );
