@@ -206,10 +206,9 @@ class PaymentApprovalService extends ChangeNotifier {
       id: 'tier_ga',
       name: 'General Admission',
       price: 928,
-      currency: 'INR',
-      availableApprox: 100,
-      totalCapacity: 200,
-      soldOut: false,
+      description: 'Standard Entry Pass',
+      perks: ['Access to General Arena'],
+      available: 100,
     );
     const demoEvent = EventModel(
       id: 'ev_lucknow',
