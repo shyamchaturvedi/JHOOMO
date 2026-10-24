@@ -348,7 +348,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> with Si
  SnackBar(
  backgroundColor: MiloColors.bgSurface,
  content: Text(
- ' Verified Badge added to your Milo Profile!',
+ ' Verified Badge added to your Jhoomo Profile!',
  style: GoogleFonts.inter(color: MiloColors.emerald, fontWeight: FontWeight.w800),
  ),
  ),

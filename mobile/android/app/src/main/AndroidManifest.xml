@@ -31,12 +31,12 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Milo deep links: milo://m/EVENT_ID?ref=CODE | milo://m/CODE -->
+            <!-- Jhoomo deep links: jhoomo://m/EVENT_ID?ref=CODE | jhoomo://m/CODE -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="milo" android:host="m"/>
+                <data android:scheme="jhoomo" android:host="m"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

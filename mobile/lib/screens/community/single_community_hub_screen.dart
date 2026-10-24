@@ -1140,7 +1140,7 @@ class _CreatePostSheetState extends State<_CreatePostSheet> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your verified role and badge are added automatically by Milo.',
+                  'Your verified role and badge are added automatically by Jhoomo.',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: MiloColors.textMuted,

@@ -330,7 +330,7 @@ class _PromoterDashboardScreenState extends State<PromoterDashboardScreen> {
  icon: const Icon(Icons.share_outlined, color: MiloColors.primaryLight),
  onPressed: () {
  Clipboard.setData(ClipboardData(
- text: 'Promote top Lucknow events with Milo & earn 10% cash commission per ticket: ${MiloConfig.promoterLink()}'));
+ text: 'Promote top Lucknow events with Jhoomo & earn 10% cash commission per ticket: ${MiloConfig.promoterLink()}'));
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(
  backgroundColor: MiloColors.bgSurface,
@@ -723,7 +723,7 @@ class _PromoterDashboardScreenState extends State<PromoterDashboardScreen> {
  icon: const Icon(Icons.share, size: 18, color: MiloColors.emerald),
  onPressed: () {
  final msg =
- ' Book passes for ${item.eventTitle} on Milo with my exclusive referral link & get instant entry QR on WhatsApp:\n${item.shareLink}\n(Use Code: ${item.referralCode})';
+ ' Book passes for ${item.eventTitle} on Jhoomo with my exclusive referral link & get instant entry QR on WhatsApp:\n${item.shareLink}\n(Use Code: ${item.referralCode})';
  Clipboard.setData(ClipboardData(text: msg));
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(

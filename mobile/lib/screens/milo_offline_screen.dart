@@ -61,7 +61,7 @@ class _MiloOfflineScreenState extends State<MiloOfflineScreen>
  SnackBar(
  backgroundColor: MiloColors.bgSurface,
  content: Text(
- 'Still unable to reach Milo servers. Please check your network.',
+ 'Still unable to reach Jhoomo servers. Please check your network.',
  style: GoogleFonts.inter(
  color: MiloColors.rose,
  fontWeight: FontWeight.w600,

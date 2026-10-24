@@ -80,7 +80,7 @@ class MiloRazorpayService {
     try {
       _razorpay!.open(options);
     } catch (e) {
-      debugPrint('Milo Razorpay Open Error: $e');
+      debugPrint('Jhoomo Razorpay Open Error: $e');
     }
   }
 

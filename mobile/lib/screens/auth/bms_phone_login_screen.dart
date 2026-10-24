@@ -190,7 +190,7 @@ class _BMSPhoneLoginScreenState extends State<BMSPhoneLoginScreen> {
  ),
  const SizedBox(height: 6),
  Text(
- 'Milna Aasaan • Events Yaadgaar',
+ 'Milna Aasaan • Pal Yaadgaar',
  style: GoogleFonts.inter(
  fontSize: 12,
  fontWeight: FontWeight.w600,
@@ -347,7 +347,7 @@ class _BMSPhoneLoginScreenState extends State<BMSPhoneLoginScreen> {
 
  // Minimal Legal Terms 
  Text(
- 'By continuing, you agree to our Terms & Privacy Policy',
+                    'By continuing, you agree to JHOOMO Terms & Privacy Policy',
  style: GoogleFonts.inter(
  fontSize: 11,
  color: const Color(0xFF94A3B8),

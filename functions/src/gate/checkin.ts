@@ -125,10 +125,12 @@ async function runCheckIn(input: CheckInInput): Promise<Record<string, unknown>>
         fail('TICKET_REFUNDED_OR_VOID', 'This ticket was refunded or voided.');
       }
 
+      let tierName = String(ticket.tierName ?? '');
       if (tierId) {
         const tierSnap = await tx.get(
           db().collection('events').doc(input.eventId).collection('ticketTiers').doc(tierId),
         );
+        tierName = String(tierSnap.data()?.name ?? '');
         const validDays = tierSnap.data()?.validDays as number[] | null | undefined;
         if (validDays && validDays.length > 0) {
           const eventStartAt = ticket.eventStartAt as Timestamp | undefined;
@@ -139,6 +141,12 @@ async function runCheckIn(input: CheckInInput): Promise<Record<string, unknown>>
           }
         }
       }
+
+      const shard = Math.floor(Math.random() * GATE_STATS_SHARDS);
+      const statsRef = db().collection('gateStats').doc(input.eventId).collection('shards').doc(String(shard));
+      const statsSnap = await tx.get(statsRef);
+      const byGate = (statsSnap.data()?.byGate ?? {}) as Record<string, number>;
+      const firstName = await firstNameOf(ticket.userId);
 
       await tx.create(checkinRef, {
         schemaVersion: 1,
@@ -151,7 +159,7 @@ async function runCheckIn(input: CheckInInput): Promise<Record<string, unknown>>
         at: FieldValue.serverTimestamp(),
         mode: input.mode,
         offlineAt: input.offlineAt ?? null,
-        attendeeFirstName: firstNameOf(ticket.userId),
+        attendeeFirstName: firstName,
         seq: ticket.seq ?? 0,
       });
 
@@ -161,10 +169,6 @@ async function runCheckIn(input: CheckInInput): Promise<Record<string, unknown>>
         checkedInGate: input.gate,
       });
 
-      const shard = Math.floor(Math.random() * GATE_STATS_SHARDS);
-      const statsRef = db().collection('gateStats').doc(input.eventId).collection('shards').doc(String(shard));
-      const statsSnap = await tx.get(statsRef);
-      const byGate = (statsSnap.data()?.byGate ?? {}) as Record<string, number>;
       tx.set(
         statsRef,
         {
@@ -175,15 +179,9 @@ async function runCheckIn(input: CheckInInput): Promise<Record<string, unknown>>
         { merge: true },
       );
 
-      const tierName = tierId
-        ? (
-            await db().collection('events').doc(input.eventId).collection('ticketTiers').doc(tierId).get()
-          ).data()?.name ?? ''
-        : String(ticket.tierName ?? '');
-
       return {
         result: 'APPROVED',
-        firstName: firstNameOf(ticket.userId),
+        firstName,
         tierName,
         admits: Number(ticket.admits ?? 1),
         seq: Number(ticket.seq ?? 0),

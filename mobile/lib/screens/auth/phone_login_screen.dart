@@ -199,8 +199,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
  ),
  Expanded(
  child: Text(
- 'I confirm I am 18+ and agree to Milo’s Terms & Privacy Policy.',
- style: GoogleFonts.inter(fontSize: 12, color: MiloColors.textSecondary),
+          'I confirm I am 18+ and agree to JHOOMO’s Terms & Privacy Policy.',
+          style: GoogleFonts.inter(fontSize: 12, color: MiloColors.textSecondary),
  ),
  ),
  ],

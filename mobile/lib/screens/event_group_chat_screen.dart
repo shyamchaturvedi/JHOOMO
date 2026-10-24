@@ -27,11 +27,11 @@ class _EventGroupChatScreenState extends State<EventGroupChatScreen> {
  final List<Map<String, dynamic>> _messages = [
  {
  'id': 'm_01',
- 'sender': 'Milo Host Bot',
+  'sender': 'Jhoomo Host Bot',
  'isHost': true,
  'text': 'Welcome to the official attendee squad! Respect fellow members. No selling unauthorized tickets or offensive content.',
  'time': '10:00 AM',
- 'reactions': {'': 12, '': 28},
+  'reactions': {'like': 12, 'love': 28},
  },
  {
  'id': 'm_02',
@@ -39,7 +39,7 @@ class _EventGroupChatScreenState extends State<EventGroupChatScreen> {
  'isHost': false,
  'text': 'Is parking available near Gate 3 or should we park at the metro lot?',
  'time': '10:14 AM',
- 'reactions': {'': 4},
+  'reactions': {'like': 4},
  },
  {
  'id': 'm_03',
@@ -47,7 +47,7 @@ class _EventGroupChatScreenState extends State<EventGroupChatScreen> {
  'isHost': true,
  'text': 'Gate 3 parking is reserved for VIP/Gold pass holders. General parking is adjacent to Metro Pillar 140!',
  'time': '10:16 AM',
- 'reactions': {'': 19, '': 8},
+  'reactions': {'like': 19, 'love': 8},
  },
  ];
 
@@ -136,7 +136,7 @@ class _EventGroupChatScreenState extends State<EventGroupChatScreen> {
  const SizedBox(width: 10),
  Expanded(
  child: Text(
- 'Entry gates open at 6:30 PM. Keep your Milo rotating QR ready.',
+ 'Entry gates open at 6:30 PM. Keep your Jhoomo rotating QR ready.',
  style: GoogleFonts.inter(color: Colors.white70, fontSize: 12),
  ),
  ),

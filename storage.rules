@@ -18,8 +18,8 @@ service firebase.storage {
       allow read: if true;
       allow write: if request.auth != null
                    && request.auth.token.organizer == true
-                   && get(/databases/(default)/documents/events/$(eventId)).data.organizerId == request.auth.uid
-                   && get(/databases/(default)/documents/events/$(eventId)).data.status in ['draft','changes_requested']
+                   && firestore.get(/databases/(default)/documents/events/$(eventId)).data.organizerId == request.auth.uid
+                   && firestore.get(/databases/(default)/documents/events/$(eventId)).data.status in ['draft','changes_requested']
                    && request.resource.size < 5 * 1024 * 1024
                    && request.resource.contentType.matches('image/(jpeg|png|webp)');
     }
@@ -40,17 +40,24 @@ service firebase.storage {
     // Organizer attendee exports — functions only, 15-minute signed URL.
     match /exports/{organizerId}/{file} { allow read, write: if false; }
 
-    // Encrypted chat blobs [P1] — members only.
+    // Encrypted chat blobs [P1] — only chat participants.
     match /chat/{chatId}/{messageFile} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+                   && (request.auth.token.admin == true
+                       || request.auth.uid in firestore.get(/databases/(default)/documents/chats/$(chatId)).data.participants);
       allow write: if request.auth != null
+                   && request.auth.uid in firestore.get(/databases/(default)/documents/chats/$(chatId)).data.participants
                    && request.resource.size < 2 * 1024 * 1024;
     }
 
-    // Support attachments.
+    // Support attachments — ticket owner or admin only.
     match /support/{ticketId}/{fileName} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+                   && (request.auth.token.admin == true
+                       || firestore.get(/databases/(default)/documents/supportTickets/$(ticketId)).data.userId == request.auth.uid);
       allow write: if request.auth != null
+                   && (request.auth.token.admin == true
+                       || firestore.get(/databases/(default)/documents/supportTickets/$(ticketId)).data.userId == request.auth.uid)
                    && request.resource.size < 5 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
     }

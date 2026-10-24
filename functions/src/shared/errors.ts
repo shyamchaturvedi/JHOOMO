@@ -6,6 +6,7 @@ export type MiloErrorCode =
   | 'INVALID_INPUT'
   | 'NOT_FOUND'
   | 'CONFLICT'
+  | 'ALREADY_REGISTERED'
   | 'RATE_LIMITED'
   | 'CONSENT_REQUIRED'
   | 'AGE_RESTRICTED'
@@ -34,6 +35,7 @@ const HTTP_STATUS: Record<MiloErrorCode, HttpsError['code']> = {
   INVALID_INPUT: 'invalid-argument',
   NOT_FOUND: 'not-found',
   CONFLICT: 'already-exists',
+  ALREADY_REGISTERED: 'already-exists',
   RATE_LIMITED: 'resource-exhausted',
   CONSENT_REQUIRED: 'failed-precondition',
   AGE_RESTRICTED: 'failed-precondition',

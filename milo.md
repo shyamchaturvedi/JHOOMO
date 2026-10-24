@@ -6,7 +6,7 @@ Privacy First
 
 App Name: Milo
 
-Tagline: Milna Aasaan. Events Yaadgaar. Privacy Tumhari.
+Tagline: Milna Aasaan. Pal Yaadgaar. Data Aapka.
 
 Shyam, Milo ka idea ek aisa all-in-one social discovery + party & events + ticket booking platform banana hai, jahan users naye logon se mil sakein, dandiya/garba nights aur other events discover kar sakein, tickets book karein, friends ke saath plan karein, aur apni privacy par poora control rakhein.
 

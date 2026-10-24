@@ -11,7 +11,10 @@ import '../screens/wishlist_screen.dart';
 import '../screens/legal_policy_screen.dart';
 import '../screens/auth/login_router.dart';
 import '../screens/auth/phone_login_screen.dart';
+import '../screens/community/single_community_hub_screen.dart';
 import '../screens/organizer/list_your_show_screen.dart';
+import '../screens/promoter/become_influencer_promoter_screen.dart';
+import '../screens/promoter/promoter_dashboard_screen.dart';
 import 'app_logo.dart';
 
 class MiloSideDrawer extends StatelessWidget {
@@ -35,9 +38,11 @@ class MiloSideDrawer extends StatelessWidget {
  final role = MiloSessionService.currentRole;
  final name = MiloSessionService.currentUserName.isNotEmpty
  ? MiloSessionService.currentUserName
- : 'Milo Guest';
+ : 'Jhoomo Guest';
  final phone = MiloSessionService.currentUserPhone;
  final isOrganizer = role == MiloRole.organizer;
+ final isPromoter = role == MiloRole.promoter;
+ final isCustomer = role == MiloRole.customer;
  final ticketCount = PaymentApprovalService.instance.userTickets.length;
 
  return Drawer(
@@ -99,6 +104,7 @@ class MiloSideDrawer extends StatelessWidget {
  onTap: () => _closeThenTab(context, 4),
  ),
  const SizedBox(height: 6),
+ if (isCustomer) ...[
  _sectionLabel('Partners'),
  _tile(
  context,
@@ -106,14 +112,18 @@ class MiloSideDrawer extends StatelessWidget {
  title: 'List Your Show',
  subtitle: 'Host events & earn as an organizer',
  accent: true,
- onTap: () => _closeThen(
+ onTap: () => _closeThen(context, const ListYourShowScreen()),
+ ),
+ _tile(
  context,
- isOrganizer
- ? const ListYourShowScreen()
- : const ListYourShowScreen(),
+ icon: Icons.campaign_rounded,
+ title: 'Become an Influencer',
+ subtitle: 'Promote shows & earn from referral links',
+ onTap: () => _closeThen(context, const BecomeInfluencerPromoterScreen()),
  ),
- ),
- if (isOrganizer)
+ ],
+ if (isOrganizer) ...[
+ _sectionLabel('My Work'),
  _tile(
  context,
  icon: Icons.dashboard_customize_rounded,
@@ -123,6 +133,23 @@ class MiloSideDrawer extends StatelessWidget {
  LoginRouter.go(context, MiloRole.organizer);
  },
  ),
+ ],
+ if (isPromoter) ...[
+ _sectionLabel('My Work'),
+ _tile(
+ context,
+ icon: Icons.insights_rounded,
+ title: 'Influencer Dashboard',
+ subtitle: 'Links, clicks, sales & earnings',
+ onTap: () => _closeThen(context, const PromoterDashboardScreen()),
+ ),
+ _tile(
+ context,
+ icon: Icons.add_photo_alternate_rounded,
+ title: 'Create Community Post',
+ onTap: () => _closeThen(context, const SingleCommunityHubScreen()),
+ ),
+ ],
  _tile(
  context,
  icon: Icons.support_agent_rounded,

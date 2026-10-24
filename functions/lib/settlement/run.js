@@ -23,7 +23,13 @@ const ids_1 = require("../shared/ids");
  * (PRD §8.3 / §12.3). Funds are released to the organiser through Razorpay
  * Route held transfers; Milo never custodies the money itself.
  */
-exports.settlementRun = (0, scheduler_1.onSchedule)({ schedule: 'every day 11:00', timeZone: 'Asia/Kolkata', region: 'asia-south1', maxInstances: 1 }, async () => {
+exports.settlementRun = (0, scheduler_1.onSchedule)({
+    schedule: 'every day 11:00',
+    timeZone: 'Asia/Kolkata',
+    region: 'asia-south1',
+    maxInstances: 1,
+    secrets: [razorpay_1.RAZORPAY_KEY_ID, razorpay_1.RAZORPAY_KEY_SECRET],
+}, async () => {
     const now = new Date();
     const events = await (0, admin_1.db)()
         .collection('events')

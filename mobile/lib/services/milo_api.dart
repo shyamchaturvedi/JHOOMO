@@ -20,7 +20,7 @@ class MiloApiException implements Exception {
  String toString() => 'MiloApiException($code): $message';
 }
 
-/// Client for the Milo v4 Firebase backend.
+/// Client for the Jhoomo v4 Firebase backend.
 ///
 /// The backend is the single source of truth for price, inventory, consent,
 /// refunds and check-ins — the app never decides those locally. Every call is
@@ -69,7 +69,7 @@ class MiloApi {
  .post(uri, headers: await _headers(), body: jsonEncode({'data': data}))
  .timeout(const Duration(seconds: 30));
  } catch (err) {
- throw MiloApiException('NETWORK_ERROR', 'Could not reach Milo. Check your connection.');
+ throw MiloApiException('NETWORK_ERROR', 'Could not reach Jhoomo. Check your connection.');
  }
 
  Map<String, dynamic> body;
@@ -77,7 +77,7 @@ class MiloApi {
  body = jsonDecode(response.body) as Map<String, dynamic>;
  } catch (_) {
  if (response.statusCode >= 200 && response.statusCode < 300) return const {};
- throw MiloApiException('INTERNAL', 'Unexpected response from Milo.');
+ throw MiloApiException('INTERNAL', 'Unexpected response from Jhoomo.');
  }
 
  if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -125,8 +125,9 @@ class MiloApi {
  Future<Map<String, dynamic>> completeProfile({
  required String displayName,
  required String dobIso,
- String? cityId,
- String? gender,
+ required String cityId,
+ required String gender,
+ required List<Map<String, dynamic>> consents,
  List<String> interests = const [],
  String? bio,
  }) =>
@@ -137,6 +138,7 @@ class MiloApi {
  'gender': gender,
  'interests': interests,
  'bio': bio,
+ 'consents': consents,
  });
 
  Future<Map<String, dynamic>> requestAccountDeletion({String? reason}) =>
@@ -199,25 +201,66 @@ class MiloApi {
 
  // booking 
 
- Future<Map<String, dynamic>> createBooking({
+  Future<Map<String, dynamic>> createBooking({
  required String eventId,
- required Map<String, int> quantities,
+ required List<Map<String, dynamic>> items,
  String? promoCode,
+ String? referralCode,
+ String? contactEmail,
  String? idempotencyKey,
  }) =>
  call('createBooking', {
  'eventId': eventId,
- 'quantities': quantities,
- 'promoCode': promoCode,
- 'idempotencyKey': idempotencyKey,
+ 'items': items,
+ if (promoCode != null) 'promoCode': promoCode,
+ if (referralCode != null) 'referralCode': referralCode,
+ if (contactEmail != null) 'contactEmail': contactEmail,
+ if (idempotencyKey != null) 'idempotencyKey': idempotencyKey,
  });
 
  Future<Map<String, dynamic>> applyPromo({
- required String eventId,
+ required String bookingId,
  required String promoCode,
- required Map<String, int> quantities,
  }) =>
- call('applyPromo', {'eventId': eventId, 'promoCode': promoCode, 'quantities': quantities});
+ call('applyPromo', {'bookingId': bookingId, 'promoCode': promoCode});
+
+ Future<Map<String, dynamic>> submitManualPayment({
+ required String eventId,
+ required String tierId,
+ required int quantity,
+ required String method,
+ required String utr,
+ required String attendeeName,
+ required String attendeePhone,
+ String? organizerUpiId,
+ String? proofUrl,
+ String? note,
+ String? idempotencyKey,
+ }) =>
+ call('submitManualPayment', {
+ 'eventId': eventId,
+ 'tierId': tierId,
+ 'quantity': quantity,
+ 'method': method,
+ 'utr': utr,
+ 'attendeeName': attendeeName,
+ 'attendeePhone': attendeePhone,
+ if (organizerUpiId != null) 'organizerUpiId': organizerUpiId,
+ if (proofUrl != null) 'proofUrl': proofUrl,
+ if (note != null) 'note': note,
+ if (idempotencyKey != null) 'idempotencyKey': idempotencyKey,
+ });
+
+ Future<Map<String, dynamic>> reviewManualPayment({
+ required String requestId,
+ required String decision,
+ String? reason,
+ }) =>
+ call('reviewManualPayment', {
+ 'requestId': requestId,
+ 'decision': decision,
+ if (reason != null) 'reason': reason,
+ });
 
  Future<Map<String, dynamic>> cancelPendingBooking(String bookingId) =>
  call('cancelPendingBooking', {'bookingId': bookingId});

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/milo_theme.dart';
-import '../models/models.dart';
 
 /// S-20 · Connection Requests Screen
 /// Tabs: Received · Sent with sender summary, icebreaker, Accept / Decline actions

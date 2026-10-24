@@ -9,38 +9,65 @@ const inventory_1 = require("../booking/inventory");
 const notify_1 = require("../shared/notify");
 const time_1 = require("../shared/time");
 /**
- * Releases inventory held by abandoned checkouts (§13.3 `expireReservations`).
- * Runs every minute so a held seat never blocks another buyer for long.
+ * Releases inventory held by abandoned checkouts and ignored manual-payment
+ * requests (§13.3 `expireReservations`). Runs every minute so a held seat never
+ * blocks another buyer for long.
  */
 exports.expireReservations = (0, scheduler_1.onSchedule)({ schedule: 'every 1 minutes', region: 'asia-south1', maxInstances: 1 }, async () => {
     const now = firestore_1.Timestamp.now();
+    const [timedOut, manualTimedOut] = await Promise.all([
+        expireStaleHolds('pending_payment', now),
+        expireStaleHolds('pending_approval', now),
+    ]);
+    const expired = timedOut + manualTimedOut;
+    if (expired > 0)
+        firebase_functions_1.logger.info('expireReservations.complete', { expired });
+});
+async function expireStaleHolds(status, now) {
     const stale = await (0, admin_1.db)()
         .collection('bookings')
-        .where('status', '==', 'pending_payment')
+        .where('status', '==', status)
         .where('reservationExpiresAt', '<=', now)
         .limit(200)
         .get();
     let expired = 0;
     for (const doc of stale.docs) {
         const booking = doc.data();
+        const bookingRef = (0, admin_1.db)().collection('bookings').doc(doc.id);
         const updated = await (0, admin_1.db)()
-            .collection('bookings')
-            .doc(doc.id)
-            .update({
-            status: 'expired',
-            updatedAt: firestore_1.FieldValue.serverTimestamp(),
+            .runTransaction(async (tx) => {
+            const fresh = await tx.get(bookingRef);
+            const data = fresh.data();
+            if (!data || data.status !== status)
+                return false;
+            const expiresAt = data.reservationExpiresAt;
+            if (!expiresAt || expiresAt.toMillis() > now.toMillis())
+                return false;
+            tx.update(bookingRef, {
+                status: 'expired',
+                updatedAt: firestore_1.FieldValue.serverTimestamp(),
+            });
+            const requestId = String(data.manualRequestId ?? '');
+            if (status === 'pending_approval' && requestId) {
+                tx.update((0, admin_1.db)().collection('payment_requests').doc(requestId), {
+                    status: 'EXPIRED',
+                    updated_at: firestore_1.FieldValue.serverTimestamp(),
+                });
+            }
+            return true;
         })
-            .then(() => true)
             .catch(() => false);
         if (!updated)
             continue;
         const allocations = (booking.reservation?.shards ?? []);
         await (0, inventory_1.releaseInventory)(String(booking.eventId), allocations).catch(() => undefined);
+        await (0, notify_1.notifyUser)(String(booking.userId), status === 'pending_approval' ? 'payment_expired' : 'booking_expired', status === 'pending_approval' ? 'Payment request expired' : 'Booking hold expired', status === 'pending_approval'
+            ? 'The organizer did not verify your payment in time. Your seats have been released; please contact support if you already paid.'
+            : 'Your held seats have been released. You can start a new booking.', { deepLink: '/my-tickets', channel: 'bookings' }).catch(() => undefined);
         expired += 1;
     }
-    if (expired > 0)
-        firebase_functions_1.logger.info('expireReservations.complete', { expired });
-});
+    return expired;
+}
 /**
  * Sends the 24-hour and 2-hour event reminders (§14). Reminders are marked on
  * the ticket so a rescheduled run never double-sends.

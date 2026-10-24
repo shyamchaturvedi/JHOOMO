@@ -128,7 +128,7 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
  style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
  ),
  Text(
- 'Verified via penny-drop • T+1 Escrow Auto-Release',
+ 'Verified via penny-drop • T+1 Safe Auto-Release',
  style: GoogleFonts.inter(color: Colors.white54, fontSize: 11),
  ),
  ],

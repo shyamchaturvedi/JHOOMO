@@ -5,7 +5,6 @@ import '../services/milo_db_service.dart';
 import '../models/models.dart';
 import '../services/mock_data.dart';
 import '../theme/milo_theme.dart';
-import '../widgets/milo_shell_scope.dart';
 import 'event_details_screen.dart';
 
 class ExploreEventsScreen extends StatefulWidget {

@@ -6,7 +6,7 @@ import { db } from '../shared/admin';
 import { fail, MiloError } from '../shared/errors';
 import { getFeesConfig, getPublicConfig } from '../shared/config';
 import { computePricing, PricingLine } from '../shared/pricing';
-import { isAtLeastAge } from '../shared/age';
+import { isAtLeastAge, MIN_AGE } from '../shared/age';
 import { bindBookingRef, newId, nextBookingRef } from '../shared/ids';
 import { createOrder, cancelOrder } from '../shared/razorpay';
 import { eventIdSchema, promoCodeSchema, tierIdSchema } from '../shared/schemas';
@@ -108,11 +108,15 @@ export const createBooking = miloOnCall({}, async (req) => {
     fail('INVALID_INPUT', 'Complete your profile before booking tickets.');
   }
   const dob = user.dob as Timestamp;
-  if (event.ageLimit > 0 && !isAtLeastAge(dob.toDate(), event.ageLimit, now)) {
-    fail('AGE_RESTRICTED', `This event is ${event.ageLimit}+ only.`);
-  }
-  if (event.ageLimit === 0 && !isAtLeastAge(dob.toDate(), 18, now)) {
-    fail('AGE_RESTRICTED', 'Milo is for users aged 18 and above.');
+  const eventAgeLimit = Number(event.ageLimit ?? 0);
+  const requiredAge = Math.max(MIN_AGE, eventAgeLimit);
+  if (!isAtLeastAge(dob.toDate(), requiredAge, now)) {
+    fail(
+      'AGE_RESTRICTED',
+      eventAgeLimit > 0
+        ? `This event is ${eventAgeLimit}+ only.`
+        : 'Milo is for users aged 18 and above.',
+    );
   }
 
   const tierDocs = await Promise.all(

@@ -1,5 +1,5 @@
 # Milo App — Complete Product Requirements Document (PRD v3.0 Master Blueprint)
-### Tagline: *Milna Aasaan. Events Yaadgaar. Privacy Tumhari.*
+### Tagline: *Milna Aasaan. Pal Yaadgaar. Data Aapka.*
 ### Architecture: BookMyShow SP++ (Social Discovery + Hyperlocal Events + Gate Ticketing + Multi-Role Operations)
 
 ---

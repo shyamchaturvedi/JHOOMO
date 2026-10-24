@@ -95,7 +95,7 @@ class PromoterAuditLog {
  });
 }
 
-/// Promoter referral + sales audit store for Milo.
+/// Promoter referral + sales audit store for Jhoomo.
 ///
 /// Backed by Firestore (`referrals` + `promoter_audit_logs`) so links and
 /// commission numbers survive restarts and sync across devices. The
@@ -619,7 +619,7 @@ class MiloPromoterTrackingService extends ChangeNotifier {
  promoterHandle: data['promoter_handle']?.toString() ?? '@promoter',
  referralCode: code,
  eventId: eventId,
- eventTitle: data['event_title']?.toString() ?? 'Milo Event',
+ eventTitle: data['event_title']?.toString() ?? 'Jhoomo Event',
  shareLink: MiloConfig.eventLink(eventId, ref: code),
  totalClicks: ((data['clicks'] as num?)?.toInt()) ?? 0,
  ticketsSold: ((data['sales_count'] as num?)?.toInt()) ?? 0,
@@ -653,8 +653,8 @@ class MiloPromoterTrackingService extends ChangeNotifier {
  id: id,
  promoterName: ref?.promoterName ?? promoterId,
  referralCode: code,
- eventTitle: data['event_title']?.toString() ?? 'Milo Event',
- buyerName: data['buyer_name']?.toString() ?? 'Milo User',
+ eventTitle: data['event_title']?.toString() ?? 'Jhoomo Event',
+ buyerName: data['buyer_name']?.toString() ?? 'Jhoomo User',
  tierName: data['tier_name']?.toString() ?? 'Pass',
  quantity: ((data['quantity'] as num?)?.toInt()) ?? 1,
  totalAmount: amount,

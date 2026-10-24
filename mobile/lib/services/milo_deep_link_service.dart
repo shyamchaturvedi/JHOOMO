@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 
-/// Handles Milo deep links of the form:
+/// Handles Jhoomo deep links of the form:
 /// milo://m/e/<eventId>?ref=<CODE>
 /// milo://m/<CODE> (invite / referral code)
 /// Captures the referral code + event id so the app can pre-apply the

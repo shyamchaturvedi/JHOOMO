@@ -16,6 +16,7 @@ const emailcode_1 = require("../shared/emailcode");
 const time_1 = require("../shared/time");
 const notify_1 = require("../shared/notify");
 const firebase_functions_1 = require("firebase-functions");
+const uniqueness_1 = require("../shared/uniqueness");
 const CONSENT_VERSION = '1.0';
 function toPublicDisplayName(displayName) {
     const parts = displayName.trim().split(/\s+/).filter(Boolean);
@@ -35,15 +36,36 @@ function parseDob(value) {
         (0, errors_1.fail)('INVALID_INPUT', 'Invalid date of birth.');
     return parsed;
 }
+async function ensurePhoneUnique(uid, rawPhone) {
+    const normalized = (0, uniqueness_1.normalizeIndianPhone)(rawPhone);
+    if (!normalized)
+        return '';
+    const pHash = (0, uniqueness_1.phoneHash)(normalized);
+    const [userByHash, usersByField] = await Promise.all([
+        (0, admin_1.db)().collection('users').where('phoneHash', '==', pHash).limit(5).get(),
+        (0, admin_1.db)().collection('users').where('normalizedPhone', '==', normalized).limit(5).get(),
+    ]);
+    for (const doc of [...userByHash.docs, ...usersByField.docs]) {
+        if (doc.id !== uid) {
+            (0, errors_1.fail)('ALREADY_REGISTERED', 'This mobile number is already registered with another account.');
+        }
+    }
+    return normalized;
+}
 exports.bootstrapUser = (0, callable_1.miloOnCall)({ enforceAppCheck: false }, async (req) => {
     const ctx = (0, auth_1.requireAuth)(req);
     const ref = (0, admin_1.db)().collection('users').doc(ctx.uid);
     const snap = await ref.get();
+    const rawPhone = ctx.token.phone_number ?? null;
+    const normalizedPhone = await ensurePhoneUnique(ctx.uid, rawPhone);
+    const pHash = normalizedPhone ? (0, uniqueness_1.phoneHash)(normalizedPhone) : '';
     if (!snap.exists) {
         await ref.set({
             schemaVersion: 1,
-            phone: ctx.token.phone_number ?? null,
-            phoneVerified: Boolean(ctx.token.phone_number),
+            phone: rawPhone,
+            normalizedPhone: normalizedPhone || null,
+            phoneHash: pHash || null,
+            phoneVerified: Boolean(rawPhone),
             displayName: '',
             avatarUrl: null,
             bio: null,
@@ -87,7 +109,13 @@ exports.bootstrapUser = (0, callable_1.miloOnCall)({ enforceAppCheck: false }, a
     if (data.status === 'banned') {
         (0, errors_1.fail)('FORBIDDEN', 'This account has been permanently closed.');
     }
-    await ref.set({ lastActiveAt: firestore_1.FieldValue.serverTimestamp() }, { merge: true });
+    await ref.set({
+        phone: rawPhone ?? data.phone ?? null,
+        normalizedPhone: normalizedPhone || data.normalizedPhone || null,
+        phoneHash: pHash || data.phoneHash || null,
+        lastActiveAt: firestore_1.FieldValue.serverTimestamp(),
+        updatedAt: firestore_1.FieldValue.serverTimestamp(),
+    }, { merge: true });
     return { isNewUser: false, roles };
 });
 const completeProfileSchema = zod_1.z.object({

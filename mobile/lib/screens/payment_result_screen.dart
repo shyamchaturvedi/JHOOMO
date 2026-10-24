@@ -11,7 +11,7 @@ import 'my_tickets_screen.dart';
 /// Pending: live listener banner
 /// Failure: retry or start over
 class PaymentResultScreen extends StatefulWidget {
- final String bookingRef; // e.g. MILO-892182
+ final String bookingRef; // e.g. JHOOMO-892182
  final String status; // 'success' | 'pending' | 'failed'
  final String? failureReason;
  final BookedTicket? bookedTicket;
@@ -414,7 +414,7 @@ class _BookingRefCard extends StatelessWidget {
  const Icon(Icons.verified_rounded, size: 14, color: Color(0xFF16A34A)),
  const SizedBox(width: 4),
  Text(
- 'Milo Escrow Protected',
+  'Jhoomo Safe Payment Protected',
  style: GoogleFonts.inter(
  fontSize: 12,
  color: const Color(0xFF16A34A),

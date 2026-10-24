@@ -31,7 +31,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
  'type': 'gate',
  'title': 'Locked Gate Security &\nSafety',
  'description':
- 'Enjoy screenshot-proof HMAC dynamic QR tickets, guaranteed escrow protection, and 1-tap SOS safety features for complete peace of mind at every venue.',
+ 'Enjoy screenshot-proof HMAC dynamic QR tickets, guaranteed safe payment protection, and 1-tap SOS safety features for complete peace of mind at every venue.',
  },
  ];
 

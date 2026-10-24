@@ -11,7 +11,10 @@ const notify_1 = require("../shared/notify");
 const inventory_1 = require("./inventory");
 const promo_1 = require("./promo");
 const finance_1 = require("../settlement/finance");
-exports.razorpayWebhook = (0, https_1.onRequest)({ region: 'asia-south1', secrets: [] }, async (req, res) => {
+exports.razorpayWebhook = (0, https_1.onRequest)({
+    region: 'asia-south1',
+    secrets: [razorpay_1.RAZORPAY_KEY_ID, razorpay_1.RAZORPAY_KEY_SECRET, razorpay_1.RAZORPAY_WEBHOOK_SECRET],
+}, async (req, res) => {
     const signature = req.header('x-razorpay-signature') ?? '';
     const rawBody = req.rawBody ?? Buffer.from(JSON.stringify(req.body ?? {}));
     if (!(0, razorpay_1.verifyWebhookSignature)(rawBody, signature)) {
@@ -76,7 +79,6 @@ async function handleCaptured(orderId, gatewayPaymentId, amountPaise, method) {
     const ticketIds = [];
     const ticketDocs = [];
     const secretDocs = [];
-    const attendeeDocs = [];
     const items = (found.data.items ?? []);
     const userSnap = await (0, admin_1.db)().collection('users').doc(found.data.userId).get();
     const user = userSnap.data() ?? {};
@@ -118,21 +120,15 @@ async function handleCaptured(orderId, gatewayPaymentId, amountPaise, method) {
             seq += 1;
         }
     }
-    const attendeeId = `${found.data.eventId}_${found.data.userId}`;
-    attendeeDocs.push({
-        id: attendeeId,
-        data: {
-            schemaVersion: 1,
-            eventId: found.data.eventId,
-            uid: found.data.userId,
-            ticketCount: ticketIds.length,
-            firstTicketAt: firestore_1.FieldValue.serverTimestamp(),
-            radarOptIn: false,
-            incognito: user.privacy?.incognito === true,
-        },
-    });
+    const attendeeRef = (0, admin_1.db)()
+        .collection('eventAttendees')
+        .doc(`${found.data.eventId}_${found.data.userId}`);
     await (0, admin_1.db)().runTransaction(async (tx) => {
-        const bookingSnap = await tx.get(found.ref);
+        const [bookingSnap, attendeeSnap, paymentSnap] = await Promise.all([
+            tx.get(found.ref),
+            tx.get(attendeeRef),
+            tx.get(paymentRef),
+        ]);
         const status = bookingSnap.data()?.status;
         if (status === 'confirmed' || status === 'completed')
             return;
@@ -156,9 +152,16 @@ async function handleCaptured(orderId, gatewayPaymentId, amountPaise, method) {
             tx.set((0, admin_1.db)().collection('tickets').doc(doc.id), doc.data);
         for (const doc of secretDocs)
             tx.set((0, admin_1.db)().collection('ticketSecrets').doc(doc.id), doc.data);
-        for (const doc of attendeeDocs)
-            tx.set((0, admin_1.db)().collection('eventAttendees').doc(doc.id), doc.data);
-        const paymentSnap = await tx.get(paymentRef);
+        const existingAttendee = attendeeSnap.data();
+        tx.set(attendeeRef, {
+            schemaVersion: 1,
+            eventId: found.data.eventId,
+            uid: found.data.userId,
+            ticketCount: firestore_1.FieldValue.increment(ticketIds.length),
+            firstTicketAt: existingAttendee?.firstTicketAt ?? firestore_1.FieldValue.serverTimestamp(),
+            radarOptIn: existingAttendee?.radarOptIn ?? false,
+            incognito: user.privacy?.incognito === true,
+        }, { merge: true });
         const webhookEventIds = (paymentSnap.data()?.webhookEventIds ?? []);
         tx.set(paymentRef, {
             schemaVersion: 1,

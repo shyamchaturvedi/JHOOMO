@@ -205,7 +205,7 @@ class BMSListYourShowPortalScreen extends StatelessWidget {
 
  Center(
  child: Text(
- 'Incase of any query, please write to\nbd@milo.app',
+ 'Incase of any query, please write to\nbd@jhoomo.app',
  textAlign: TextAlign.center,
  style: GoogleFonts.inter(
  fontSize: 12,

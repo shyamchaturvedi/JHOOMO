@@ -6,7 +6,7 @@ import { db } from '../shared/admin';
 import { miloOnCall } from '../shared/callable';
 import { requireAuth, requireAdmin } from '../shared/auth';
 import { fail } from '../shared/errors';
-import { createTransfer } from '../shared/razorpay';
+import { createTransfer, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } from '../shared/razorpay';
 import { computeSettlement, evaluateSettlementHolds } from '../shared/settlement';
 import { getLimitsConfig } from '../shared/config';
 import { settlementScheduledFor } from '../shared/time';
@@ -29,7 +29,13 @@ interface EventForSettlement {
  * Route held transfers; Milo never custodies the money itself.
  */
 export const settlementRun = onSchedule(
-  { schedule: 'every day 11:00', timeZone: 'Asia/Kolkata', region: 'asia-south1', maxInstances: 1 },
+  {
+    schedule: 'every day 11:00',
+    timeZone: 'Asia/Kolkata',
+    region: 'asia-south1',
+    maxInstances: 1,
+    secrets: [RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET],
+  },
   async () => {
     const now = new Date();
     const events = await db()

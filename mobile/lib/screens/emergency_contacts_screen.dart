@@ -35,7 +35,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
  if (_contacts.length >= 3) {
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(
- content: Text('Maximum 3 emergency contacts allowed as per Milo Safety Shield policy.'),
+ content: Text('Maximum 3 emergency contacts allowed as per Jhoomo Safety Shield policy.'),
  behavior: SnackBarBehavior.floating,
  ),
  );

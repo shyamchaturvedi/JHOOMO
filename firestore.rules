@@ -146,6 +146,11 @@ service cloud.firestore {
                   || (isOrganizer() && resource.data.organizerId == uid()) || isAdmin();
       allow write: if false;
     }
+    match /payment_requests/{id} {
+      allow read: if (signedIn() && (resource.data.user_id == uid() || resource.data.organizer_id == uid()))
+                  || isAdmin();
+      allow write: if false;
+    }
     match /tickets/{id} {
       allow read: if (signedIn() && resource.data.userId == uid())
                   || (isOrganizer() && resource.data.organizerId == uid()) || isAdmin();

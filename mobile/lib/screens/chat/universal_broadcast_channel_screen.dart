@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
-import '../../theme/milo_theme.dart';
 import '../../services/milo_session_service.dart';
 
 enum BroadcastType { eventOrganizer, creatorChannel }
@@ -131,7 +130,7 @@ class _UniversalBroadcastChannelScreenState extends State<UniversalBroadcastChan
           senderName: widget.ownerName,
           senderAvatar: widget.ownerAvatar,
           title: 'Outfit & Red Carpet Meetup 💖',
-          message: 'Wearing Emerald Green lehenga tonight! Let us all click a grand squad photo near the Milo Photo Booth at 8:30 PM sharp.',
+          message: 'Wearing Emerald Green lehenga tonight! Let us all click a grand squad photo near the Jhoomo Photo Booth at 8:30 PM sharp.',
           time: '5h ago',
           reactionCount: 210,
         ),

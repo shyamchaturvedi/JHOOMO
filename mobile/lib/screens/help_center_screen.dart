@@ -28,7 +28,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
  {
  'cat': 'Ticketing & Entry',
  'q': 'How does the dynamic rotating QR code work at the gate?',
- 'a': 'Milo generates a new security token every 30 seconds to prevent screenshots. The gate staff scanner verifies it instantaneously. If you are offline, a signed offline QR code is automatically displayed.',
+  'a': 'Jhoomo generates a new security token every 30 seconds to prevent screenshots. The gate staff scanner verifies it instantaneously. If you are offline, a signed offline QR code is automatically displayed.',
  },
  {
  'cat': 'Refunds & Cancel',
@@ -48,7 +48,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
  {
  'cat': 'Radar & Privacy',
  'q': 'Can other attendees see my mobile number on Meet People Radar?',
- 'a': 'No. Milo never reveals your phone number, exact GPS location, email, or full name on Radar. Only your first name, age group, and shared interests are visible.',
+ 'a': 'No. Jhoomo never reveals your phone number, exact GPS location, email, or full name on Radar. Only your first name, age group, and shared interests are visible.',
  },
  ];
 
@@ -148,7 +148,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
  Navigator.pop(ctx);
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(
- content: Text('Support ticket created (#MILO-TK-8192). We will respond via in-app notification.'),
+              content: Text('Support ticket created (#JHOOMO-TK-8192). We will respond via in-app notification.'),
  backgroundColor: MiloColors.accentGreen,
  behavior: SnackBarBehavior.floating,
  ),

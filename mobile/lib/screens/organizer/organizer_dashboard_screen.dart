@@ -8,13 +8,7 @@ import '../../services/milo_db_service.dart';
 import '../../services/milo_session_service.dart';
 import '../../services/payment_approval_service.dart';
 import '../../theme/milo_theme.dart';
-import 'create_event_screen.dart';
-import 'qr_scanner_screen.dart';
-import 'manage_staff_roles_screen.dart';
 import '../legal_policy_screen.dart';
-import '../bank_account_settings_screen.dart';
-import '../promoter/promoter_dashboard_screen.dart';
-import 'settlements_screen.dart';
 
 class OrganizerDashboardScreen extends StatefulWidget {
  const OrganizerDashboardScreen({super.key});
@@ -467,14 +461,22 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen> {
  backgroundColor: MiloColors.emerald,
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
  ),
- onPressed: () {
- PaymentApprovalService.instance.approveRequest(req.id);
+ onPressed: () async {
+ final messenger = ScaffoldMessenger.of(context);
+ final ok = await PaymentApprovalService.instance.approveRequest(req.id);
+ if (!context.mounted) return;
  Navigator.pop(context);
- ScaffoldMessenger.of(context).showSnackBar(
+ messenger.showSnackBar(
  SnackBar(
  backgroundColor: MiloColors.bgSurface,
- content: Text(' Pass approved for ${req.attendeeName}! QR released.',
- style: GoogleFonts.inter(color: MiloColors.emerald, fontWeight: FontWeight.w700)),
+ content: Text(
+ ok
+ ? ' Pass approved for ${req.attendeeName}! QR released.'
+ : PaymentApprovalService.instance.lastActionError ?? 'Could not approve payment.',
+ style: GoogleFonts.inter(
+ color: ok ? MiloColors.emerald : MiloColors.rose,
+ fontWeight: FontWeight.w700),
+ ),
  ),
  );
  },
@@ -525,13 +527,21 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen> {
  ),
  ElevatedButton(
  style: ElevatedButton.styleFrom(backgroundColor: MiloColors.rose),
- onPressed: () {
- PaymentApprovalService.instance.rejectRequest(req.id, reasonController.text.trim());
+ onPressed: () async {
+ final messenger = ScaffoldMessenger.of(context);
+ final ok = await PaymentApprovalService.instance
+ .rejectRequest(req.id, reasonController.text.trim());
+ if (!context.mounted) return;
  Navigator.pop(context);
- ScaffoldMessenger.of(context).showSnackBar(
+ messenger.showSnackBar(
  SnackBar(
  backgroundColor: MiloColors.bgSurface,
- content: Text('Payment flagged as invalid.', style: GoogleFonts.inter(color: MiloColors.rose)),
+ content: Text(
+ ok
+ ? 'Payment flagged as invalid.'
+ : PaymentApprovalService.instance.lastActionError ?? 'Could not reject payment.',
+ style: GoogleFonts.inter(color: ok ? MiloColors.rose : MiloColors.rose),
+ ),
  ),
  );
  },
@@ -847,13 +857,21 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen> {
  backgroundColor: MiloColors.emerald,
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
  ),
- onPressed: () {
- service.approveRequest(req.id);
- ScaffoldMessenger.of(context).showSnackBar(
+ onPressed: () async {
+ final messenger = ScaffoldMessenger.of(context);
+ final ok = await service.approveRequest(req.id);
+ if (!mounted) return;
+ messenger.showSnackBar(
  SnackBar(
  backgroundColor: MiloColors.bgSurface,
- content: Text(' Pass approved for ${req.attendeeName}! QR released.',
- style: GoogleFonts.inter(color: MiloColors.emerald, fontWeight: FontWeight.w700)),
+ content: Text(
+ ok
+ ? ' Pass approved for ${req.attendeeName}! QR released.'
+ : service.lastActionError ?? 'Could not approve payment.',
+ style: GoogleFonts.inter(
+ color: ok ? MiloColors.emerald : MiloColors.rose,
+ fontWeight: FontWeight.w700),
+ ),
  ),
  );
  },
@@ -891,355 +909,35 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen> {
  ),
  const SizedBox(height: 20),
 
- // Action buttons: Create Event & QR Scanner
- Row(
- children: [
- Expanded(
- child: GestureDetector(
- onTap: () async {
- await Navigator.push(
- context,
- MaterialPageRoute(builder: (context) => const CreateEventScreen()),
- );
- _loadOrganizerData();
- },
- child: Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: MiloColors.bgSurface,
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: MiloColors.glassBorder),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
+ // App is dashboard-only for organizers. All operations live on web.
  Container(
- padding: const EdgeInsets.all(8),
- decoration: const BoxDecoration(color: MiloColors.primary, shape: BoxShape.circle),
- child: const Icon(Icons.add, color: MiloColors.bg, size: 20),
- ),
- const SizedBox(height: 12),
- Text('Host New Event', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: MiloColors.textPrimary)),
- Text('Dandiya, Kitty, Gig', style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11)),
- ],
- ),
- ),
- ),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: GestureDetector(
- onTap: () {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (context) => const QRScannerScreen()),
- );
- },
- child: Container(
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
  color: MiloColors.bgSurface,
  borderRadius: BorderRadius.circular(18),
  border: Border.all(color: MiloColors.primaryLight.withValues(alpha: 0.4)),
  ),
+ child: Row(
+ children: [
+ Container(
+ padding: const EdgeInsets.all(10),
+ decoration: const BoxDecoration(color: MiloColors.primaryLight, shape: BoxShape.circle),
+ child: const Icon(Icons.language_rounded, color: MiloColors.bg, size: 20),
+ ),
+ const SizedBox(width: 14),
+ Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Container(
- padding: const EdgeInsets.all(8),
- decoration: const BoxDecoration(color: MiloColors.primaryLight, shape: BoxShape.circle),
- child: const Icon(Icons.qr_code_scanner, color: MiloColors.bg, size: 20),
- ),
- const SizedBox(height: 12),
- Text('Gate Check-in', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: MiloColors.textPrimary)),
- Text('Live QR Scanner', style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11)),
- ],
- ),
- ),
- ),
- ),
- ],
- ),
- const SizedBox(height: 14),
-
- // Staff & Gate Access Control Card
- GestureDetector(
- onTap: () {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (context) => const ManageStaffRolesScreen()),
- );
- },
- child: Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: MiloColors.bgSurface,
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: MiloColors.rose.withValues(alpha: 0.4)),
- ),
- child: Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- Row(
- children: [
- Container(
- padding: const EdgeInsets.all(10),
- decoration: BoxDecoration(
- color: MiloColors.rose.withValues(alpha: 0.15),
- shape: BoxShape.circle,
- ),
- child: const Icon(Icons.shield_rounded, color: MiloColors.rose, size: 20),
- ),
- const SizedBox(width: 14),
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Text('Staff & Gate Access Control ',
+ Text('Manage on Web',
  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: MiloColors.textPrimary)),
- const SizedBox(width: 6),
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
- decoration: BoxDecoration(color: MiloColors.rose.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
- child: Text('LOCKED', style: GoogleFonts.inter(color: MiloColors.rose, fontSize: 9, fontWeight: FontWeight.w900)),
- ),
- ],
- ),
- Text('Assign specific gate/event roles. Stop unauthorized scanners',
- style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11)),
- ],
- ),
- ],
- ),
- const Icon(Icons.arrow_forward_ios, color: MiloColors.primaryLight, size: 14),
+ const SizedBox(height: 2),
+ Text('Event creation, gate scanning, staff access, KYC, payouts and settlements are handled from the organizer web dashboard.',
+ style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11, height: 1.4)),
  ],
  ),
  ),
- ),
- const SizedBox(height: 14),
-
- // S-46 Settlements & Payouts Card
- GestureDetector(
- onTap: () {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (context) => const SettlementsScreen()),
- );
- },
- child: Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: MiloColors.bgSurface,
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: MiloColors.emerald.withValues(alpha: 0.4)),
- ),
- child: Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- Row(
- children: [
- Container(
- padding: const EdgeInsets.all(10),
- decoration: BoxDecoration(
- color: MiloColors.emerald.withValues(alpha: 0.15),
- shape: BoxShape.circle,
- ),
- child: const Icon(Icons.account_balance_wallet_rounded, color: MiloColors.emerald, size: 20),
- ),
- const SizedBox(width: 14),
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Text('Settlements & Escrow Payouts ',
- style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: MiloColors.textPrimary)),
- const SizedBox(width: 6),
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
- decoration: BoxDecoration(color: MiloColors.emerald.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
- child: Text('T+1 RELEASE', style: GoogleFonts.inter(color: MiloColors.emerald, fontSize: 9, fontWeight: FontWeight.w900)),
- ),
  ],
- ),
- Text('Ledger breakdown, UTR dispatch numbers & statement download',
- style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11)),
- ],
- ),
- ],
- ),
- const Icon(Icons.arrow_forward_ios, color: MiloColors.emerald, size: 14),
- ],
- ),
- ),
- ),
- const SizedBox(height: 14),
-
- // Promoter & Influencer Performance Tracker (Synced Referral Tracking)
-  // CREATOR & INFLUENCER AFFILIATE AUTOMATION HUB
-  GestureDetector(
-  onTap: () {
-  Navigator.push(
-  context,
-  MaterialPageRoute(builder: (context) => const PromoterDashboardScreen()),
-  );
-  },
-  child: Container(
-  padding: const EdgeInsets.all(18),
-  decoration: BoxDecoration(
-  gradient: const LinearGradient(
-  colors: [Color(0xFFFFF1F2), Color(0xFFFFFAF9)],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-  ),
-  borderRadius: BorderRadius.circular(22),
-  border: Border.all(color: const Color(0xFFFDA4AF), width: 1.2),
-  boxShadow: [
-  BoxShadow(
-  color: const Color(0xFFE11D48).withValues(alpha: 0.08),
-  blurRadius: 12,
-  offset: const Offset(0, 4),
-  ),
-  ],
-  ),
-  child: Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-  Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-  Row(
-  children: [
-  Container(
-  padding: const EdgeInsets.all(10),
-  decoration: const BoxDecoration(
-  color: Color(0xFFE11D48),
-  shape: BoxShape.circle,
-  ),
-  child: const Icon(Icons.hub_rounded, color: Colors.white, size: 20),
-  ),
-  const SizedBox(width: 12),
-  Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-  Text('Creator & Affiliate Collabs ',
-  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w900, color: const Color(0xFF1E293B))),
-  Text('Influencer leads, viral booking codes & sales',
-  style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 11)),
-  ],
-  ),
-  ],
-  ),
-  Container(
-  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-  decoration: BoxDecoration(
-  color: const Color(0xFF10B981).withValues(alpha: 0.15),
-  borderRadius: BorderRadius.circular(8),
-  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
-  ),
-  child: Text(
-  'AUTO-MODE ACTIVE',
-  style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w900, color: const Color(0xFF10B981)),
-  ),
-  ),
-  ],
-  ),
-  const SizedBox(height: 14),
-  Container(
-  padding: const EdgeInsets.all(12),
-  decoration: BoxDecoration(
-  color: Colors.white,
-  borderRadius: BorderRadius.circular(14),
-  border: Border.all(color: const Color(0xFFFEE2E2)),
-  ),
-  child: Row(
-  mainAxisAlignment: MainAxisAlignment.spaceAround,
-  children: [
-  Column(
-  children: [
-  Text('Active Promoters', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF64748B))),
-  const SizedBox(height: 4),
-  Text('12 Creators', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFF1E293B))),
-  ],
-  ),
-  Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
-  Column(
-  children: [
-  Text('Attendee Discount', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF64748B))),
-  const SizedBox(height: 4),
-  Text('Flat ₹5 or ₹20 OFF', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFFE11D48))),
-  ],
-  ),
-  Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
-  Column(
-  children: [
-  Text('Payout Hold', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF64748B))),
-  const SizedBox(height: 4),
-  Text('T+5 to T+7 Days', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFF16A34A))),
-  ],
-  ),
-  ],
-  ),
-  ),
-  const SizedBox(height: 12),
-  Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-  Text(
-  'Tap to view creator ledger, clicks & live ticket sales',
-  style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B)),
-  ),
-  const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFE11D48), size: 14),
-  ],
-  ),
-  ],
-  ),
-  ),
-  ),
-
- // Payout Bank Account Quick Tile
- GestureDetector(
- onTap: () {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (context) => const BankAccountSettingsScreen()),
- );
- },
- child: Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: MiloColors.bgSurface,
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: MiloColors.glassBorder),
- ),
- child: Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- Row(
- children: [
- Container(
- padding: const EdgeInsets.all(10),
- decoration: BoxDecoration(
- color: MiloColors.emerald.withValues(alpha: 0.15),
- shape: BoxShape.circle,
- ),
- child: const Icon(Icons.account_balance_rounded, color: MiloColors.emerald, size: 20),
- ),
- const SizedBox(width: 14),
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text('Payout Bank Account',
- style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: MiloColors.textPrimary)),
- Text('HDFC Bank ••••••9201 (Direct Settlement)', style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11)),
- ],
- ),
- ],
- ),
- const Icon(Icons.arrow_forward_ios, color: MiloColors.primaryLight, size: 14),
- ],
- ),
  ),
  ),
  const SizedBox(height: 24),

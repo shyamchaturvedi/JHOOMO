@@ -441,13 +441,13 @@ class _ManageStaffRolesScreenState extends State<ManageStaffRolesScreen> {
  }
 
  void _sharePasscode(String name, String phone, String passcode, String eventTitle, String gate) {
- final message = 'Hi $name, your Milo gate pass is ready! \n\n'
+ final message = 'Hi $name, your Jhoomo gate pass is ready! \n\n'
  'Event: $eventTitle\n'
  'Gate: $gate\n'
  'Login mobile: $phone\n'
  'Gate Passcode: $passcode\n\n'
- 'Open the Milo app → Login as Gate Staff → enter your mobile number & this passcode to start scanning tickets.';
- Share.share(message, subject: 'Milo Gate Pass — $name');
+ 'Open the Jhoomo app → Login as Gate Staff → enter your mobile number & this passcode to start scanning tickets.';
+ Share.share(message, subject: 'Jhoomo Gate Pass — $name');
  }
 
  Widget _buildModalTextField(TextEditingController ctrl, String hint) {

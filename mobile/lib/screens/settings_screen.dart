@@ -34,7 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
  const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
  const SizedBox(width: 10),
  Text(
- 'Delete Milo Account',
+ 'Delete Jhoomo Account',
  style: GoogleFonts.inter(
  color: Colors.white,
  fontSize: 17,

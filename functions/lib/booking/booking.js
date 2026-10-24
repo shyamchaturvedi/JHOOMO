@@ -75,11 +75,12 @@ exports.createBooking = (0, callable_1.miloOnCall)({}, async (req) => {
         (0, errors_1.fail)('INVALID_INPUT', 'Complete your profile before booking tickets.');
     }
     const dob = user.dob;
-    if (event.ageLimit > 0 && !(0, age_1.isAtLeastAge)(dob.toDate(), event.ageLimit, now)) {
-        (0, errors_1.fail)('AGE_RESTRICTED', `This event is ${event.ageLimit}+ only.`);
-    }
-    if (event.ageLimit === 0 && !(0, age_1.isAtLeastAge)(dob.toDate(), 18, now)) {
-        (0, errors_1.fail)('AGE_RESTRICTED', 'Milo is for users aged 18 and above.');
+    const eventAgeLimit = Number(event.ageLimit ?? 0);
+    const requiredAge = Math.max(age_1.MIN_AGE, eventAgeLimit);
+    if (!(0, age_1.isAtLeastAge)(dob.toDate(), requiredAge, now)) {
+        (0, errors_1.fail)('AGE_RESTRICTED', eventAgeLimit > 0
+            ? `This event is ${eventAgeLimit}+ only.`
+            : 'Milo is for users aged 18 and above.');
     }
     const tierDocs = await Promise.all(input.items.map(async (item) => {
         const snap = await (0, admin_1.db)()

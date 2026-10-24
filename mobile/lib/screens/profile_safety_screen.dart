@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/milo_theme.dart';
 import 'edit_profile_screen.dart';
-import 'my_tickets_screen.dart';
 import 'your_bookings_screen.dart';
 import 'privacy_shield_screen.dart';
 import 'settings_screen.dart';
 import 'help_center_screen.dart';
+import 'legal_policy_screen.dart';
+import 'community/single_community_hub_screen.dart';
 import 'organizer/bms_list_your_show_portal_screen.dart';
+import 'organizer/organizer_dashboard_screen.dart';
 import 'promoter/become_influencer_promoter_screen.dart';
+import 'promoter/promoter_dashboard_screen.dart';
 import 'auth/bms_phone_login_screen.dart';
 import '../services/milo_auth_service.dart';
 import '../services/milo_session_service.dart';
@@ -24,6 +27,12 @@ class ProfileSafetyScreen extends StatefulWidget {
 class _ProfileSafetyScreenState extends State<ProfileSafetyScreen> {
   @override
   Widget build(BuildContext context) {
+    final role = MiloSessionService.currentRole;
+    final isOrganizer = role == MiloRole.organizer;
+    final isPromoter = role == MiloRole.promoter;
+    final isCustomer = role == MiloRole.customer;
+    final hasWorkHub = isOrganizer || isPromoter;
+
     return Scaffold(
       backgroundColor: JhoomoTokens.surface,
       body: SafeArea(
@@ -155,54 +164,121 @@ class _ProfileSafetyScreenState extends State<ProfileSafetyScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Grow on JHOOMO Section (Organizers & Promoters)
-            Text(
-              'Partner & Grow with JHOOMO',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: JhoomoTokens.textSecondary,
+            if (hasWorkHub) ...[
+              Text(
+                'My Work',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: JhoomoTokens.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: JhoomoTokens.outline),
+                ),
+                child: Column(
+                  children: [
+                    if (isOrganizer)
+                      _buildMenuItem(
+                        icon: Icons.dashboard_customize_rounded,
+                        title: 'Organizer Dashboard',
+                        subtitle: 'Events, sales, check-ins & payout summary',
+                        iconColor: const Color(0xFFE11D48),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const OrganizerDashboardScreen()),
+                          );
+                        },
+                      ),
+                    if (isOrganizer && isPromoter)
+                      const Divider(height: 1, color: JhoomoTokens.outlineVariant),
+                    if (isPromoter)
+                      _buildMenuItem(
+                        icon: Icons.insights_rounded,
+                        title: 'Influencer Dashboard',
+                        subtitle: 'Promo links, clicks, sales & earnings',
+                        iconColor: const Color(0xFF9333EA),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const PromoterDashboardScreen()),
+                          );
+                        },
+                      ),
+                    if (isPromoter)
+                      const Divider(height: 1, color: JhoomoTokens.outlineVariant),
+                    if (isPromoter)
+                      _buildMenuItem(
+                        icon: Icons.add_photo_alternate_rounded,
+                        title: 'Create Community Post',
+                        subtitle: 'Post updates to the events community',
+                        iconColor: const Color(0xFF10B981),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const SingleCommunityHubScreen()),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
 
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: JhoomoTokens.outline),
+            if (isCustomer) ...[
+              Text(
+                'Partner & Grow with JHOOMO',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: JhoomoTokens.textSecondary,
+                ),
               ),
-              child: Column(
-                children: [
-                  _buildMenuItem(
-                    icon: Icons.event_available_rounded,
-                    title: 'List Your Show',
-                    subtitle: 'Host events, sell tickets & manage gates DIY',
-                    iconColor: const Color(0xFFE11D48),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const BMSListYourShowPortalScreen()),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1, color: JhoomoTokens.outlineVariant),
-                  _buildMenuItem(
-                    icon: Icons.campaign_rounded,
-                    title: 'Become an Influencer / Promoter',
-                    subtitle: 'Promote shows, get custom links & earn UPI payouts',
-                    iconColor: const Color(0xFF9333EA),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const BecomeInfluencerPromoterScreen()),
-                      );
-                    },
-                  ),
-                ],
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: JhoomoTokens.outline),
+                ),
+                child: Column(
+                  children: [
+                    _buildMenuItem(
+                      icon: Icons.event_available_rounded,
+                      title: 'List Your Show',
+                      subtitle: 'Host events, sell tickets & manage gates DIY',
+                      iconColor: const Color(0xFFE11D48),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const BMSListYourShowPortalScreen()),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1, color: JhoomoTokens.outlineVariant),
+                    _buildMenuItem(
+                      icon: Icons.campaign_rounded,
+                      title: 'Become an Influencer / Promoter',
+                      subtitle: 'Promote shows, get custom links & earn payouts',
+                      iconColor: const Color(0xFF9333EA),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const BecomeInfluencerPromoterScreen()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
+            ],
 
             // Primary Account Actions 
             Text(
@@ -256,6 +332,97 @@ class _ProfileSafetyScreenState extends State<ProfileSafetyScreen> {
                     subtitle: 'Ghost mode, blocklist & DPDP controls',
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyShieldScreen()));
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Policies & Transparency
+            Text(
+              'Policies & Transparency',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: JhoomoTokens.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: JhoomoTokens.outline),
+              ),
+              child: Column(
+                children: [
+                  _buildMenuItem(
+                    icon: Icons.assignment_outlined,
+                    title: 'Terms of Service',
+                    subtitle: 'Ticketing, entry & platform usage rules',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LegalPolicyScreen(
+                            title: 'Terms of Service',
+                            policyType: 'terms',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, color: JhoomoTokens.outlineVariant),
+                  _buildMenuItem(
+                    icon: Icons.privacy_tip_outlined,
+                    title: 'Privacy Policy & DPDP Notice',
+                    subtitle: 'How your data is stored, used & protected',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LegalPolicyScreen(
+                            title: 'Privacy Policy',
+                            policyType: 'privacy',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, color: JhoomoTokens.outlineVariant),
+                  _buildMenuItem(
+                    icon: Icons.currency_rupee_rounded,
+                    title: 'Refund & Cancellation Policy',
+                    subtitle: '100% refund rules & dispute resolution',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LegalPolicyScreen(
+                            title: 'Refund & Cancellation Policy',
+                            policyType: 'refund_policy',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, color: JhoomoTokens.outlineVariant),
+                  _buildMenuItem(
+                    icon: Icons.storefront_outlined,
+                    title: 'Organizer Terms & Payout Rules',
+                    subtitle: 'Host responsibilities, fees & safe payouts',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LegalPolicyScreen(
+                            title: 'Organizer Terms',
+                            policyType: 'organizer_terms',
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ],

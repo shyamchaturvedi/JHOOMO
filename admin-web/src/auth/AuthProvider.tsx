@@ -58,13 +58,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setError('This account is not registered as a Milo admin.');
           return;
         }
+        if (adminData && adminData.active === false) {
+          setUser(null);
+          setError('This admin account has been disabled.');
+          return;
+        }
+
+        const docLevel = adminData?.level;
+        const level: AdminLevel =
+          docLevel === 'L1' || docLevel === 'L2' || docLevel === 'L3'
+            ? docLevel
+            : claimLevel === 'L1' || claimLevel === 'L2' || claimLevel === 'L3'
+              ? claimLevel
+              : 'L1';
 
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email ?? '',
-          level: (adminData?.level as AdminLevel | undefined) ?? claimLevel,
-          active: adminData?.active !== false,
+          level,
+          active: true,
         });
+      } catch {
+        setUser(null);
+        setError('Could not verify your admin access.');
       } finally {
         setLoading(false);
       }

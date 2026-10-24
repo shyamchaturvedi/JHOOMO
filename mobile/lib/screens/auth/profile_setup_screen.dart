@@ -25,7 +25,7 @@ class ProfileSetupScreen extends StatefulWidget {
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
  final TextEditingController _nameController = TextEditingController();
- int _selectedAge = 23;
+ DateTime _selectedDob = DateTime(DateTime.now().year - 23, 1, 1);
  String _selectedCity = 'Lucknow';
  MiloUserRole _selectedRole = MiloUserRole.customer;
  bool _isAdminAllowed = false;
@@ -143,7 +143,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text('Your Age (18+)', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: MiloColors.textSecondary)),
+ Text('Date of Birth (18+)', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: MiloColors.textSecondary)),
  const SizedBox(height: 8),
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -152,19 +152,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
  borderRadius: BorderRadius.circular(16),
  border: Border.all(color: MiloColors.glassBorder),
  ),
- child: DropdownButtonHideUnderline(
- child: DropdownButton<int>(
- value: _selectedAge,
- dropdownColor: MiloColors.bgSurface,
- icon: const Icon(Icons.arrow_drop_down, color: MiloColors.primaryLight),
- isExpanded: true,
- items: List.generate(40, (i) => i + 18).map((age) {
- return DropdownMenuItem<int>(
- value: age,
- child: Text('$age yrs', style: GoogleFonts.inter(color: MiloColors.textPrimary, fontWeight: FontWeight.w600)),
- );
- }).toList(),
- onChanged: (val) => setState(() => _selectedAge = val ?? 23),
+ child: InkWell(
+ onTap: _pickDateOfBirth,
+ child: Row(
+ children: [
+ Expanded(
+ child: Text(
+ _dobLabel,
+ style: GoogleFonts.inter(color: MiloColors.textPrimary, fontWeight: FontWeight.w600),
+ ),
+ ),
+ const Icon(Icons.calendar_today_rounded, size: 18, color: MiloColors.primaryLight),
+ ],
  ),
  ),
  ),
@@ -287,7 +286,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   title: 'Super Admin Central ',
   subtitle: _isAdminAllowed
   ? 'Platform analytics, moderation, fraud control & payouts'
-  : 'Invite only — admin access is granted by Milo operations',
+  : 'Invite only — admin access is granted by Jhoomo operations',
   badge: _isAdminAllowed ? 'GOVERNANCE' : 'LOCKED',
   ),
   ] else ...[
@@ -361,12 +360,51 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
  }
  }
 
+ int get _age {
+ final now = DateTime.now();
+ var age = now.year - _selectedDob.year;
+ if (now.month < _selectedDob.month ||
+ (now.month == _selectedDob.month && now.day < _selectedDob.day)) {
+ age -= 1;
+ }
+ return age;
+ }
+
+ String get _dobIso =>
+ '${_selectedDob.year.toString().padLeft(4, '0')}-${_selectedDob.month.toString().padLeft(2, '0')}-${_selectedDob.day.toString().padLeft(2, '0')}';
+
+ String get _dobLabel {
+ const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+ return '${_selectedDob.day} ${months[_selectedDob.month - 1]} ${_selectedDob.year}';
+ }
+
+ Future<void> _pickDateOfBirth() async {
+ final now = DateTime.now();
+ final picked = await showDatePicker(
+ context: context,
+ initialDate: _selectedDob,
+ firstDate: DateTime(now.year - 100),
+ lastDate: DateTime(now.year - 18, now.month, now.day),
+ helpText: 'Select your date of birth',
+ );
+ if (picked != null && mounted) {
+ setState(() => _selectedDob = picked);
+ }
+ }
+
  void _completeProfileAndRoute() async {
  if (_saving) return;
 
+ if (_age < 18) {
+ ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('JHOOMO is for users aged 18 and above.')),
+ );
+ return;
+ }
+
  final name = _nameController.text.trim().isNotEmpty
  ? _nameController.text.trim()
- : 'Milo User';
+ : 'JHOOMO User';
 
   MiloRole debugRole;
   switch (_selectedRole) {
@@ -396,7 +434,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final error = await auth.saveProfile(
   name: name,
   phone: _phone,
-  age: _selectedAge,
+  dobIso: _dobIso,
   city: _selectedCity,
   role: sessionRole,
   vibes: _selectedVibes,
@@ -438,7 +476,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(
  content: Text(
- 'Super Admin is invite-only. Add your phone number in Firestore → milo_config/admins.'),
+              'Super Admin is invite-only. Add your phone number in Firestore → jhoomo_config/admins.'),
  ),
  );
  return;

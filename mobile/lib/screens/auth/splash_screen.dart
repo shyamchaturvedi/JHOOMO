@@ -280,7 +280,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
  ),
  const SizedBox(height: 6),
  Text(
- 'Milna Aasaan • Events Yaadgaar • Privacy Tumhari',
+ 'Milna Aasaan • Pal Yaadgaar • Data Aapka',
  style: GoogleFonts.inter(
  fontSize: 11,
  fontWeight: FontWeight.w600,
@@ -310,7 +310,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
  const Icon(Icons.shield_outlined, size: 14, color: Color(0xFF94A3B8)),
  const SizedBox(width: 5),
  Text(
- 'Protected by Milo Escrow & Privacy Shield',
+  'Protected by Jhoomo SafePay & Privacy Shield',
  style: GoogleFonts.inter(
  fontSize: 11,
  fontWeight: FontWeight.w500,

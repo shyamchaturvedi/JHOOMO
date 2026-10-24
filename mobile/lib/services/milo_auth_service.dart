@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'milo_api.dart';
 import 'milo_session_service.dart';
 
-/// Firebase Authentication + Firestore profile service for Milo.
+/// Firebase Authentication + Firestore profile service for Jhoomo.
 /// Handles real phone-OTP login, profile persistence and role resolution.
 class MiloAuthService {
  static final MiloAuthService instance = MiloAuthService._();
@@ -158,37 +158,52 @@ class MiloAuthService {
   }
 
  /// Create / update the user profile document in Firestore.
- Future<String?> saveProfile({
- required String name,
- required String phone,
- required int age,
- required String city,
- required MiloRole role,
- List<String> vibes = const [],
- String bio = '',
- }) async {
- final db = _db;
- final user = currentUser;
- if (db == null || user == null) return 'Not signed in.';
+  Future<String?> saveProfile({
+  required String name,
+  required String phone,
+  required String dobIso,
+  required String city,
+  required MiloRole role,
+  List<String> vibes = const [],
+  String bio = '',
+  }) async {
+  final db = _db;
+  final user = currentUser;
+  if (db == null || user == null) return 'Not signed in.';
 
-  try {
-  await ensureUserDocument();
-  await db.collection('users').doc(user.uid).set({
-  'name': name,
-  'displayName': name,
-  'city': city,
-  'vibes': vibes,
-  'bio': bio,
-  'discoverable': true,
-  'updated_at': FieldValue.serverTimestamp(),
-  'updatedAt': FieldValue.serverTimestamp(),
-  }, SetOptions(merge: true));
-  return null;
-  } catch (e) {
-  debugPrint('MiloAuth saveProfile error: $e');
-  return 'Could not save profile: $e';
-  }
-  }
+   try {
+   await ensureUserDocument();
+   await MiloApi.instance.completeProfile(
+   displayName: name,
+   dobIso: dobIso,
+   cityId: city,
+   gender: 'undisclosed',
+   interests: vibes,
+   bio: bio,
+   consents: const [
+   {'type': 'terms', 'granted': true},
+   {'type': 'privacy', 'granted': true},
+   ],
+   );
+   await db.collection('users').doc(user.uid).set({
+   'name': name,
+   'displayName': name,
+   'city': city,
+   'vibes': vibes,
+   'bio': bio,
+   'discoverable': true,
+   'updated_at': FieldValue.serverTimestamp(),
+   'updatedAt': FieldValue.serverTimestamp(),
+   }, SetOptions(merge: true));
+   return null;
+   } on MiloApiException catch (e) {
+   debugPrint('MiloAuth saveProfile error: ${e.message}');
+   return e.message;
+   } catch (e) {
+   debugPrint('MiloAuth saveProfile error: $e');
+   return 'Could not save profile: $e';
+   }
+   }
 
   /// Roles are owned by the server. Local role switching is allowed only for
   /// customer/staff previews or debug builds; verified upgrades go through

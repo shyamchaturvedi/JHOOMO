@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/milo_theme.dart';
-import '../services/milo_auth_service.dart';
 
 /// S-27 · Edit Profile Screen
 /// Allows updating display name, bio (<= 160 chars), city, gender, email, and interests.
@@ -19,7 +18,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
  text: 'Event explorer, Garba enthusiast, and music festival addict. Catch me front row!',
  );
  final _cityCtrl = TextEditingController(text: 'Ahmedabad');
- final _emailCtrl = TextEditingController(text: 'sahil@milo.live');
+ final _emailCtrl = TextEditingController(text: 'sahil@jhoomo.live');
  String _gender = 'Male';
 
  final List<String> _availableInterests = [

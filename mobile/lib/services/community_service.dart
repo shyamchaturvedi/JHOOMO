@@ -23,14 +23,36 @@ class CommunityService {
         role == MiloRole.admin;
   }
 
-  Stream<List<CommunityPost>> watchPosts() {
-    return _db
-        .collection('communityPosts')
-        .where('status', isEqualTo: 'active')
-        .orderBy('createdAt', descending: true)
-        .limit(50)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map(_postFromDoc).toList());
+  Stream<List<CommunityPost>> watchPosts() async* {
+    try {
+      await for (final snapshot in _db
+          .collection('communityPosts')
+          .where('status', isEqualTo: 'active')
+          .orderBy('createdAt', descending: true)
+          .limit(50)
+          .snapshots()) {
+        yield snapshot.docs.map(_postFromDoc).toList(growable: false);
+      }
+    } on FirebaseException catch (error) {
+      if (error.code != 'failed-precondition') rethrow;
+      await for (final snapshot in _db
+          .collection('communityPosts')
+          .where('status', isEqualTo: 'active')
+          .limit(100)
+          .snapshots()) {
+        final docs = snapshot.docs.toList()
+          ..sort((a, b) {
+            final aAt =
+                (a.data()['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ??
+                    0;
+            final bAt =
+                (b.data()['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ??
+                    0;
+            return bAt.compareTo(aAt);
+          });
+        yield docs.map(_postFromDoc).toList(growable: false);
+      }
+    }
   }
 
   Future<List<CommunityComment>> fetchComments(String postId) async {
@@ -91,7 +113,7 @@ class CommunityService {
 
   CommunityPost _postFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
-    final name = _string(data['authorName'], fallback: 'Milo User');
+    final name = _string(data['authorName'], fallback: 'Jhoomo User');
     final likedBy = _stringList(data['likedBy']);
     final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
     return CommunityPost(
@@ -119,7 +141,7 @@ class CommunityService {
     DocumentSnapshot<Map<String, dynamic>> doc,
   ) {
     final data = doc.data() ?? const <String, dynamic>{};
-    final name = _string(data['authorName'], fallback: 'Milo User');
+    final name = _string(data['authorName'], fallback: 'Jhoomo User');
     final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
     return CommunityComment(
       id: doc.id,
@@ -157,7 +179,7 @@ class CommunityService {
   static String _avatar(dynamic value, String name) {
     final url = _nullableString(value);
     if (url != null && url.startsWith('https://')) return url;
-    final encoded = Uri.encodeComponent(name.isEmpty ? 'Milo User' : name);
+    final encoded = Uri.encodeComponent(name.isEmpty ? 'Jhoomo User' : name);
     return 'https://ui-avatars.com/api/?background=E11D48&color=fff&name=$encoded';
   }
 

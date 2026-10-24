@@ -58,7 +58,7 @@ class LegalPolicyScreen extends StatelessWidget {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Text(
- 'Official Milo Platform Policy',
+ 'Official Jhoomo Platform Policy',
  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w800, color: MiloColors.textPrimary),
  ),
  Text(
@@ -101,15 +101,15 @@ class LegalPolicyScreen extends StatelessWidget {
  children: [
  _sectionTitle('1. Zero-Liability Platform Marketplace Disclaimer'),
  _sectionBody(
- 'Milo App is strictly a technology platform and digital discovery marketplace. Milo does NOT organize, host, manage, sponsor, or control any event, party, Dandiya night, concert, or gathering listed on the app. All event planning, legal clearances, municipal permissions, safety measures, venue facilities, and artist performances are 100% the sole responsibility of the individual Event Organizer. Milo App shall NOT be held legally or financially liable for any mishap, dispute, delay, injury, or venue issues.',
+                  'JHOOMO App is strictly a technology platform and digital discovery marketplace. JHOOMO does NOT organize, host, manage, sponsor, or control any event, party, Dandiya night, concert, or gathering listed on the app. All event planning, legal clearances, municipal permissions, safety measures, venue facilities, and artist performances are 100% the sole responsibility of the individual Event Organizer. JHOOMO App shall NOT be held legally or financially liable for any mishap, dispute, delay, injury, or venue issues.',
  ),
  _sectionTitle('2. Organizer-Controlled Pricing & Discounts'),
  _sectionBody(
- 'Ticket pricing, discount offers, squad rates, and promo codes are independently defined and funded by the Event Organizer. Milo does not provide default coupons or guarantee organizer-side discounts.',
+ 'Ticket pricing, discount offers, squad rates, and promo codes are independently defined and funded by the Event Organizer. Jhoomo does not provide default coupons or guarantee organizer-side discounts.',
  ),
  _sectionTitle('3. Entry Verification & Venue Rules'),
  _sectionBody(
- 'Attendees must present a valid Milo digital M-Ticket (QR code) at the venue gate. The Organizer reserves full rights of admission in accordance with local regulations, age verification, and venue security standards.',
+ 'Attendees must present a valid Jhoomo digital M-Ticket (QR code) at the venue gate. The Organizer reserves full rights of admission in accordance with local regulations, age verification, and venue security standards.',
  ),
  _sectionTitle('4. Payments & Billing Transparency'),
  _sectionBody(
@@ -125,15 +125,15 @@ class LegalPolicyScreen extends StatelessWidget {
  children: [
  _sectionTitle('1. 100% Organizer Legal & Regulatory Responsibility'),
  _sectionBody(
- 'The Event Organizer represents and warrants that they have obtained all required government, municipal, police permissions, fire safety NOCs, venue approvals, sound permits, and copyright/music royalties. Milo App is solely a listing and ticketing facilitator and assumes ZERO legal or operational liability for the event.',
+                  'The Event Organizer represents and warrants that they have obtained all required government, municipal, police permissions, fire safety NOCs, venue approvals, sound permits, and copyright/music royalties. JHOOMO App is solely a listing and ticketing facilitator and assumes ZERO legal or operational liability for the event.',
  ),
  _sectionTitle('2. Organizer Payment Payout Policy (3-5 Working Days)'),
  _sectionBody(
- 'Ticket sale proceeds are held securely in platform escrow during the event cycle. Following the successful completion of the event and check-in validation, Milo will initiate and release the net payout to the Organizer\'s verified bank account within 3 to 5 business/working days, minus applicable platform service fees.',
+                  'Ticket sale proceeds are held securely in platform safe payment protection during the event cycle. Following the successful completion of the event and check-in validation, JHOOMO will initiate and release the net payout to the Organizer\'s verified bank account within 3 to 5 business/working days, minus applicable platform service fees.',
  ),
  _sectionTitle('3. Mandatory 100% Refund on Event Cancellation'),
  _sectionBody(
- 'If the event is cancelled, postponed, rescheduled, or called off for ANY reason (regulatory, weather, host-related), the Organizer is strictly legally bound to issue a full 100% refund to all ticket holders. Milo reserves the immediate right to withhold escrow funds to process automated full refunds to buyers.',
+ 'If the event is cancelled, postponed, rescheduled, or called off for ANY reason (regulatory, weather, host-related), the Organizer is strictly legally bound to issue a full 100% refund to all ticket holders. Jhoomo reserves the immediate right to withhold safe-payment funds to process automated full refunds to buyers.',
  ),
  _sectionTitle('4. Pricing & Custom Rules Autonomy'),
  _sectionBody(
@@ -149,7 +149,7 @@ class LegalPolicyScreen extends StatelessWidget {
  children: [
  _sectionTitle('1. Official Event Cancellation: 100% Guaranteed Refund'),
  _sectionBody(
- 'If an event is officially CANCELLED, postponed, or called off by the Organizer, all affected ticket buyers are entitled to a full 100% refund. The refund will be automatically processed by Milo directly back to the original payment method within 5 to 7 business days.',
+ 'If an event is officially CANCELLED, postponed, or called off by the Organizer, all affected ticket buyers are entitled to a full 100% refund. The refund will be automatically processed by Jhoomo directly back to the original payment method within 5 to 7 business days.',
  ),
  _sectionTitle('2. User Voluntary Cancellations: Refundable vs Non-Refundable Passes'),
  _sectionBody(
@@ -157,7 +157,7 @@ class LegalPolicyScreen extends StatelessWidget {
  ),
  _sectionTitle('3. Organizer Settlement Cycle & Disputes'),
  _sectionBody(
- 'In case of attendee disputes or verified false listings, Milo escrow holds the funds during the 3 to 5 working day settlement window to ensure user rights and fair dispute resolution.',
+  'In case of attendee disputes or verified false listings, Jhoomo safe payment system holds the funds during the 3 to 5 working day settlement window to ensure user rights and fair dispute resolution.',
  ),
  ],
  );
@@ -169,7 +169,7 @@ class LegalPolicyScreen extends StatelessWidget {
  children: [
  _sectionTitle('1. Privacy-First Architecture'),
  _sectionBody(
- 'Milo is built to keep user personal data safe. Your exact live GPS coordinates, phone numbers, and identity are never exposed to other attendees or organizers without your explicit consent.',
+  'Jhoomo is built to keep user personal data safe. Your exact live GPS coordinates, phone numbers, and identity are never exposed to other attendees or organizers without your explicit consent.',
  ),
  _sectionTitle('2. Incognito & Ghost Mode'),
  _sectionBody(

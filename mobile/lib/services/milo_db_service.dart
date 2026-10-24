@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import 'mock_data.dart';
 
-/// Database Service for Milo App — backed by Firebase Firestore.
+/// Database Service for Jhoomo App — backed by Firebase Firestore.
 /// Falls back to bundled mock data when Firestore is unreachable so the
 /// UI never breaks (offline / not-configured environments).
 class MiloDbService {
@@ -394,14 +394,14 @@ class MiloDbService {
 
  try {
  Query<Map<String, dynamic>> query = db.collection('bookings');
- if (code.toUpperCase().startsWith('MILO-')) {
+ if (code.toUpperCase().startsWith('JHOOMO-')) {
  query = query.where('booking_ref', isEqualTo: code);
  } else {
  query = query.where('qr_hash_token', isEqualTo: code);
  }
  final snap = await query.limit(1).get();
  if (snap.docs.isEmpty) {
- return {'status': 'INVALID', 'message': 'Ticket not found in Milo bookings'};
+ return {'status': 'INVALID', 'message': 'Ticket not found in Jhoomo bookings'};
  }
 
  final docRef = snap.docs.first.reference;
@@ -552,7 +552,7 @@ class MiloDbService {
 
  return EventModel(
  id: json['id']?.toString() ?? json['event_id']?.toString() ?? json['document_id']?.toString() ?? 'e1',
- title: json['title']?.toString() ?? 'Milo Event',
+ title: json['title']?.toString() ?? 'Jhoomo Event',
  category: json['category']?.toString() ?? 'Events',
  date: json['event_date']?.toString() ?? 'This Weekend',
  time: json['event_time']?.toString() ?? '07:00 PM',
@@ -569,7 +569,7 @@ class MiloDbService {
  ticketsLeft: ((json['tickets_left'] as num?)?.toInt()) ?? 50,
  isTrending: json['is_trending'] ?? false,
  googleMapsUrl: json['google_maps_url']?.toString() ?? 'https://maps.google.com/?q=Event+Venue',
- description: json['description']?.toString() ?? 'Live event on Milo app',
+ description: json['description']?.toString() ?? 'Live event on Jhoomo app',
  ticketTiers: tiers.isNotEmpty ? tiers : MockData.events.first.ticketTiers,
  customTermsAndConditions: json['refund_policy']?.toString() ?? '',
  );
@@ -577,61 +577,115 @@ class MiloDbService {
 
  BookedTicket _mapDocToBookedTicket(Map<String, dynamic> json) => mapBookingDoc(json);
 
- /// Public mapper so other services (payments, scanner) share one format.
- static BookedTicket mapBookingDoc(Map<String, dynamic> json) {
- final tierPrice = (json['tier_price'] as num?)?.toDouble();
- final total = (json['total_amount'] as num?)?.toDouble() ?? 499.0;
- return BookedTicket(
- bookingId: json['booking_ref']?.toString() ?? 'MILO-PASS',
- event: EventModel(
- id: json['event_id']?.toString() ?? 'e1',
- title: json['event_title']?.toString() ?? json['event']?['title']?.toString() ?? 'Milo Event',
- category: json['event_category']?.toString() ?? 'Dandiya/Garba',
- date: json['event_date']?.toString() ?? 'This Weekend',
- time: json['event_time']?.toString() ?? '07:00 PM onwards',
- venue: json['event_venue']?.toString() ?? json['venue_name']?.toString() ?? 'Venue',
- city: json['event_city']?.toString() ?? 'Lucknow',
- startingPrice: tierPrice ?? total,
- imageUrl: (json['event_banner'] ?? json['banner_url'])?.toString().isNotEmpty == true
- ? (json['event_banner'] ?? json['banner_url']).toString()
- : 'https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?auto=format&fit=crop&w=800&q=80',
- organizerName: json['event_organizer']?.toString() ?? 'Utsav Events & Club',
- tags: const ['Verified'],
- ticketsLeft: 42,
- description: 'Milo Official Event Pass',
- ticketTiers: MockData.events.first.ticketTiers,
- ),
- tier: TicketTier(
- id: json['tier_id']?.toString() ?? 'tier_1',
- name: json['tier_name']?.toString() ?? 'Pass',
- price: tierPrice ?? total,
- description: 'Verified Pass',
- perks: const ['Entry Pass'],
- available: 20,
- ),
- quantity: ((json['quantity'] as num?)?.toInt()) ?? 1,
- totalAmount: total,
- bookingTime: json['booking_time']?.toString() ?? 'Recently',
- qrData: json['qr_hash_token']?.toString() ?? 'MILO_SECURE_PASS_VERIFIED',
- status: json['status']?.toString() ?? 'CONFIRMED',
- paymentMethod: json['payment_method']?.toString() ?? 'MILO_TEST_GATEWAY',
- utrNumber: json['utr_number']?.toString() ?? '',
- organizerUpiId: json['organizer_upi_id']?.toString() ?? '',
- attendeeName: json['attendee_name']?.toString() ?? json['user_name']?.toString() ?? 'Milo Guest',
- attendeePhone: json['attendee_phone']?.toString() ?? json['user_phone']?.toString() ?? '',
- paymentProofUrl: json['payment_proof_url']?.toString() ?? '',
- rejectionReason: json['rejection_reason']?.toString() ?? '',
- uid: json['uid']?.toString() ?? '',
- checkedIn: json['checked_in'] == true,
- );
- }
+  /// Public mapper so other services (payments, scanner) share one format.
+  /// Supports both the legacy snake_case demo docs and the server booking schema.
+  static BookedTicket mapBookingDoc(Map<String, dynamic> json) {
+  final items = (json['items'] as List?)?.whereType<Map>().toList() ?? const [];
+  final firstItem = items.isNotEmpty ? items.first : const <String, dynamic>{};
+  final pricing = (json['pricing'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
+  final payment = (json['payment'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
+  final snapshot = (json['eventSnapshot'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
+
+  final tierPrice = (json['tier_price'] as num?)?.toDouble() ??
+  ((firstItem['unitPaise'] as num?)?.toDouble() != null
+  ? (firstItem['unitPaise'] as num).toDouble() / 100
+  : null);
+  final total = (json['total_amount'] as num?)?.toDouble() ??
+  ((pricing['totalPaise'] as num?)?.toDouble() != null
+  ? (pricing['totalPaise'] as num).toDouble() / 100
+  : 0);
+  final quantity = ((json['quantity'] as num?)?.toInt()) ??
+  ((firstItem['qty'] as num?)?.toInt()) ?? 1;
+  final startAt = snapshot['startAt'] ?? json['event_start_at'];
+  String eventDate = json['event_date']?.toString() ?? 'Upcoming';
+  String eventTime = json['event_time']?.toString() ?? '';
+  if (startAt is Timestamp) {
+  final dt = startAt.toDate();
+  eventDate = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+  eventTime = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+  final rawStatus = json['status']?.toString().toLowerCase() ?? 'confirmed';
+  final status = switch (rawStatus) {
+  'pending_approval' => 'PENDING_APPROVAL',
+  'pending_payment' => 'PENDING_APPROVAL',
+  'rejected' => 'REJECTED',
+  'expired' => 'EXPIRED',
+  'cancelled' || 'cancelled_by_user' || 'refunded' => 'CANCELLED',
+  _ => 'CONFIRMED',
+  };
+  final ticketIds = (json['ticketIds'] as List?)?.whereType<String>().toList() ?? const <String>[];
+
+  return BookedTicket(
+  bookingId: json['document_id']?.toString() ??
+  json['booking_ref']?.toString() ??
+  json['refCode']?.toString() ??
+  'JHOOMO-PASS',
+  event: EventModel(
+  id: json['event_id']?.toString() ?? json['eventId']?.toString() ?? 'e1',
+  title: json['event_title']?.toString() ??
+  snapshot['title']?.toString() ??
+  json['event']?['title']?.toString() ??
+  'Jhoomo Event',
+  category: json['event_category']?.toString() ?? 'Dandiya/Garba',
+  date: eventDate,
+  time: eventTime.isEmpty ? 'See ticket' : eventTime,
+  venue: json['event_venue']?.toString() ??
+  snapshot['venueName']?.toString() ??
+  json['venue_name']?.toString() ??
+  'Venue',
+  city: json['event_city']?.toString() ?? 'Lucknow',
+  startingPrice: tierPrice ?? total,
+  imageUrl: ((json['event_banner'] ?? snapshot['posterUrl'] ?? json['banner_url'])
+  ?.toString()
+  .isNotEmpty ==
+  true)
+  ? (json['event_banner'] ?? snapshot['posterUrl'] ?? json['banner_url']).toString()
+  : 'https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?auto=format&fit=crop&w=800&q=80',
+  organizerName: json['event_organizer']?.toString() ?? 'Utsav Events & Club',
+  tags: const ['Verified'],
+  ticketsLeft: 42,
+  description: 'Jhoomo Official Event Pass',
+  ticketTiers: MockData.events.first.ticketTiers,
+  ),
+  tier: TicketTier(
+  id: json['tier_id']?.toString() ?? firstItem['tierId']?.toString() ?? 'tier_1',
+  name: json['tier_name']?.toString() ?? firstItem['tierName']?.toString() ?? 'Pass',
+  price: tierPrice ?? total,
+  description: 'Verified Pass',
+  perks: const ['Entry Pass'],
+  available: 20,
+  ),
+  quantity: quantity,
+  totalAmount: total,
+  bookingTime: json['booking_time']?.toString() ?? 'Recently',
+  qrData: json['qr_hash_token']?.toString() ??
+  (ticketIds.isNotEmpty ? ticketIds.first : 'MILO_SECURE_PASS_VERIFIED'),
+  status: status,
+  paymentMethod: json['payment_method']?.toString() ??
+  payment['method']?.toString() ??
+  payment['provider']?.toString() ??
+  'MILO_TEST_GATEWAY',
+  utrNumber: json['utr_number']?.toString() ?? payment['utr']?.toString() ?? '',
+  organizerUpiId: json['organizer_upi_id']?.toString() ?? payment['organizerUpiId']?.toString() ?? '',
+  attendeeName: json['attendee_name']?.toString() ??
+  json['user_name']?.toString() ??
+  (firstItem['holderNames'] is List && (firstItem['holderNames'] as List).isNotEmpty
+  ? (firstItem['holderNames'] as List).first.toString()
+  : 'Jhoomo Guest'),
+  attendeePhone: json['attendee_phone']?.toString() ?? json['user_phone']?.toString() ?? '',
+  paymentProofUrl: json['payment_proof_url']?.toString() ?? payment['proofUrl']?.toString() ?? '',
+  rejectionReason: json['rejection_reason']?.toString() ?? json['rejectionReason']?.toString() ?? '',
+  uid: json['uid']?.toString() ?? json['userId']?.toString() ?? '',
+  checkedIn: json['checked_in'] == true,
+  );
+  }
 
  BeaconModel _mapDocToBeacon(Map<String, dynamic> json) {
  final max = ((json['squad_size_max'] as num?)?.toInt()) ?? 4;
  final current = ((json['squad_size_current'] as num?)?.toInt()) ?? 1;
  return BeaconModel(
  id: json['id']?.toString() ?? json['document_id']?.toString() ?? 'b1',
- userName: json['creator_name']?.toString() ?? 'Milo Host',
+ userName: json['creator_name']?.toString() ?? 'Jhoomo Host',
  userAvatar:
  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
  title: json['activity_type']?.toString() ?? 'Chai & Hangout',

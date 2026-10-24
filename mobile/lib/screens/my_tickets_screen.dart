@@ -310,7 +310,7 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                                   SnackBar(
                                     backgroundColor: const Color(0xFF1E293B),
                                     content: Text(
-                                      '🎟️ Milo Verified Pass copied: "${ticket.event.title} (${ticket.tier.name}) • Pass Link: ${MiloConfig.passLink(ticket.bookingId)}"',
+                                      '🎟️ Jhoomo Verified Pass copied: "${ticket.event.title} (${ticket.tier.name}) • Pass Link: ${MiloConfig.passLink(ticket.bookingId)}"',
                                       style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
                                     ),
                                   ),
@@ -598,38 +598,9 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                                           ),
                                           const SizedBox(height: 6),
                                           Text(
-                                            'UTR: ${ticket.utrNumber.isNotEmpty ? ticket.utrNumber : '329184729104'} dispatched to ${ticket.event.organizerName}. QR will unlock on approval.',
+                                            'UTR: ${ticket.utrNumber.isNotEmpty ? ticket.utrNumber : '-'} sent to ${ticket.event.organizerName}. QR unlocks only after the organizer verifies the payment.',
                                             textAlign: TextAlign.center,
                                             style: GoogleFonts.inter(color: const Color(0xFF78350F), fontSize: 11),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          SizedBox(
-                                            height: 34,
-                                            child: ElevatedButton.icon(
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(0xFF10B981),
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                              ),
-                                              icon: const Icon(Icons.flash_on_rounded, size: 14, color: Colors.white),
-                                              label: Text(
-                                                'Simulate Host Approval (Demo Unlock)',
-                                                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white),
-                                              ),
-                                              onPressed: () {
-                                                final req = PaymentApprovalService.instance.approvalRequests.firstWhere(
-                                                  (r) => r.bookingId == ticket.bookingId,
-                                                  orElse: () => PaymentApprovalService.instance.approvalRequests.first,
-                                                );
-                                                PaymentApprovalService.instance.approveRequest(req.id);
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(
-                                                    backgroundColor: const Color(0xFF047857),
-                                                    content: Text('🎉 Pass approved by Organizer! QR unlocked.',
-                                                        style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w700)),
-                                                  ),
-                                                );
-                                              },
-                                            ),
                                           ),
                                         ],
                                       ),
@@ -957,7 +928,7 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                                   SnackBar(
                                     backgroundColor: MiloColors.bgSurface,
                                     content: Text(
-                                      '🎟️ Milo Verified Pass copied: "${ticket.event.title} (${ticket.tier.name}) • Booked on JHOOMO: ${MiloConfig.passLink(ticket.bookingId)}"',
+                                      '🎟️ Jhoomo Verified Pass copied: "${ticket.event.title} (${ticket.tier.name}) • Booked on JHOOMO: ${MiloConfig.passLink(ticket.bookingId)}"',
                                       style: GoogleFonts.inter(color: MiloColors.primaryLight),
                                     ),
                                   ),

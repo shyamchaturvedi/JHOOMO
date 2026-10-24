@@ -70,8 +70,8 @@ class SystemGateScreen extends StatelessWidget {
  Text(
  message ??
  (isForceUpdate
- ? 'A new version of Milo is required to continue enjoying live bookings, gate passes, and verified Social Radar features.'
- : 'Milo core services are currently undergoing an optimization update to ensure high-speed ticketing.'),
+ ? 'A new version of Jhoomo is required to continue enjoying live bookings, gate passes, and verified Social Radar features.'
+  : 'Jhoomo core services are currently undergoing an optimization update to ensure high-speed ticketing.'),
  textAlign: TextAlign.center,
  style: GoogleFonts.inter(
  color: Colors.white70,
@@ -128,7 +128,7 @@ class SystemGateScreen extends StatelessWidget {
  elevation: 0,
  ),
  child: Text(
- isForceUpdate ? 'Update Milo on Play Store' : 'Check Status Again',
+ isForceUpdate ? 'Update Jhoomo on Play Store' : 'Check Status Again',
  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w800),
  ),
  ),

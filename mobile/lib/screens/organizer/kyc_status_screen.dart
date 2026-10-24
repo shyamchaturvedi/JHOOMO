@@ -4,7 +4,7 @@ import '../../theme/milo_theme.dart';
 import 'bms_do_it_yourself_screen.dart';
 
 /// S-41 · KYC Status & Resubmission Screen
-/// Vertical timeline: Submitted -> Automated checks -> Milo review -> Approved
+/// Vertical timeline: Submitted -> Automated checks -> Jhoomo review -> Approved
 /// Handles 'needs_info' with flagged fields, admin remarks, and edit & resubmit CTA
 class KycStatusScreen extends StatefulWidget {
  final String status; // 'submitted', 'auto_verified', 'approved', 'needs_info', 'rejected'
@@ -130,8 +130,8 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
  isCurrent: isAutoVerified && !isApproved,
  ),
  _buildTimelineStep(
- title: '3. Milo Operations & Legal Review (L2)',
- subtitle: 'Final compliance sign-off for Escrow payout gateway',
+ title: '3. Jhoomo Operations & Legal Review (L2)',
+ subtitle: 'Final compliance sign-off for safe payout gateway',
  isDone: isApproved,
  isCurrent: isAutoVerified && !isApproved,
  ),

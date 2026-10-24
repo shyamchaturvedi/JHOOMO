@@ -99,8 +99,10 @@ async function runCheckIn(input) {
             if (status === 'void' || status === 'refunded') {
                 (0, errors_1.fail)('TICKET_REFUNDED_OR_VOID', 'This ticket was refunded or voided.');
             }
+            let tierName = String(ticket.tierName ?? '');
             if (tierId) {
                 const tierSnap = await tx.get((0, admin_1.db)().collection('events').doc(input.eventId).collection('ticketTiers').doc(tierId));
+                tierName = String(tierSnap.data()?.name ?? '');
                 const validDays = tierSnap.data()?.validDays;
                 if (validDays && validDays.length > 0) {
                     const eventStartAt = ticket.eventStartAt;
@@ -112,6 +114,11 @@ async function runCheckIn(input) {
                     }
                 }
             }
+            const shard = Math.floor(Math.random() * GATE_STATS_SHARDS);
+            const statsRef = (0, admin_1.db)().collection('gateStats').doc(input.eventId).collection('shards').doc(String(shard));
+            const statsSnap = await tx.get(statsRef);
+            const byGate = (statsSnap.data()?.byGate ?? {});
+            const firstName = await firstNameOf(ticket.userId);
             await tx.create(checkinRef, {
                 schemaVersion: 1,
                 ticketId: input.ticketId,
@@ -123,7 +130,7 @@ async function runCheckIn(input) {
                 at: firestore_1.FieldValue.serverTimestamp(),
                 mode: input.mode,
                 offlineAt: input.offlineAt ?? null,
-                attendeeFirstName: firstNameOf(ticket.userId),
+                attendeeFirstName: firstName,
                 seq: ticket.seq ?? 0,
             });
             tx.update(ticketRef, {
@@ -131,21 +138,14 @@ async function runCheckIn(input) {
                 checkedInAt: firestore_1.FieldValue.serverTimestamp(),
                 checkedInGate: input.gate,
             });
-            const shard = Math.floor(Math.random() * GATE_STATS_SHARDS);
-            const statsRef = (0, admin_1.db)().collection('gateStats').doc(input.eventId).collection('shards').doc(String(shard));
-            const statsSnap = await tx.get(statsRef);
-            const byGate = (statsSnap.data()?.byGate ?? {});
             tx.set(statsRef, {
                 total: Number(statsSnap.data()?.total ?? 0) + 1,
                 byGate: { ...byGate, [input.gate]: Number(byGate[input.gate] ?? 0) + 1 },
                 updatedAt: firestore_1.FieldValue.serverTimestamp(),
             }, { merge: true });
-            const tierName = tierId
-                ? (await (0, admin_1.db)().collection('events').doc(input.eventId).collection('ticketTiers').doc(tierId).get()).data()?.name ?? ''
-                : String(ticket.tierName ?? '');
             return {
                 result: 'APPROVED',
-                firstName: firstNameOf(ticket.userId),
+                firstName,
                 tierName,
                 admits: Number(ticket.admits ?? 1),
                 seq: Number(ticket.seq ?? 0),

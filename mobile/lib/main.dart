@@ -26,11 +26,11 @@ void main() async {
  // Global Error Protection to prevent Android App from Stopping/Crashing
  FlutterError.onError = (FlutterErrorDetails details) {
  FlutterError.presentError(details);
- debugPrint('Milo App Protected Error: ${details.exception}');
+ debugPrint('Jhoomo App Protected Error: ${details.exception}');
  };
 
  PlatformDispatcher.instance.onError = (error, stack) {
- debugPrint('Milo Async Uncaught Error: $error');
+ debugPrint('Jhoomo Async Uncaught Error: $error');
  return true; // Prevents crash
  };
 

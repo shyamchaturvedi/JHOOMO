@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 
 /// Service providing unique auditory tones and haptics for JHOOMO Notifications.

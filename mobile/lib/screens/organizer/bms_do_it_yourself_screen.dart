@@ -423,7 +423,7 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  content: Text(
  verified
  ? 'Your PAN, email and bank account checks passed. You can now create events and manage gate staff.'
- : 'Your KYC is under review. You can create draft events now, and payouts unlock once Milo approves verification.',
+ : 'Your KYC is under review. You can create draft events now, and payouts unlock once Jhoomo approves verification.',
  style: GoogleFonts.inter(
  fontSize: 13,
  color: const Color(0xFF4B5563),
@@ -983,7 +983,7 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  ),
  const SizedBox(height: 6),
  Text(
- 'Mobile number is linked to your Milo login and verified at sign-in.',
+ 'Mobile number is linked to your Jhoomo login and verified at sign-in.',
  style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF94A3B8)),
  ),
  ],
@@ -998,7 +998,7 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  _sectionHeader('Bank details'),
  const SizedBox(height: 6),
  Text(
- 'Ticket revenue will be settled into this verified account via Escrow.',
+ 'Ticket revenue will be settled into this verified account via SafePay.',
  style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
  ),
  const SizedBox(height: 16),
@@ -1093,7 +1093,7 @@ class _BMSDoItYourselfScreenState extends State<BMSDoItYourselfScreen> {
  child: Padding(
  padding: const EdgeInsets.only(top: 10),
  child: Text(
- 'I accept the Milo organizer agreement and confirm that the PAN and bank account belong to the same legal entity.',
+ 'I accept the Jhoomo organizer agreement and confirm that the PAN and bank account belong to the same legal entity.',
  style: GoogleFonts.inter(
  fontSize: 11,
  color: const Color(0xFF64748B),

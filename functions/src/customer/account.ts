@@ -16,6 +16,7 @@ import { verifyEmailCode } from '../shared/emailcode';
 import { addDays } from '../shared/time';
 import { notifyUser } from '../shared/notify';
 import { logger } from 'firebase-functions';
+import { normalizeIndianPhone, phoneHash } from '../shared/uniqueness';
 
 const CONSENT_VERSION = '1.0';
 
@@ -40,6 +41,24 @@ function parseDob(value: string | number): Date {
   return parsed;
 }
 
+async function ensurePhoneUnique(uid: string, rawPhone: string | null | undefined): Promise<string> {
+  const normalized = normalizeIndianPhone(rawPhone);
+  if (!normalized) return '';
+  const pHash = phoneHash(normalized);
+
+  const [userByHash, usersByField] = await Promise.all([
+    db().collection('users').where('phoneHash', '==', pHash).limit(5).get(),
+    db().collection('users').where('normalizedPhone', '==', normalized).limit(5).get(),
+  ]);
+
+  for (const doc of [...userByHash.docs, ...usersByField.docs]) {
+    if (doc.id !== uid) {
+      fail('ALREADY_REGISTERED', 'This mobile number is already registered with another account.');
+    }
+  }
+  return normalized;
+}
+
 export const bootstrapUser = miloOnCall(
   { enforceAppCheck: false },
   async (req) => {
@@ -47,11 +66,17 @@ export const bootstrapUser = miloOnCall(
     const ref = db().collection('users').doc(ctx.uid);
     const snap = await ref.get();
 
+    const rawPhone = ctx.token.phone_number ?? null;
+    const normalizedPhone = await ensurePhoneUnique(ctx.uid, rawPhone);
+    const pHash = normalizedPhone ? phoneHash(normalizedPhone) : '';
+
     if (!snap.exists) {
       await ref.set({
         schemaVersion: 1,
-        phone: ctx.token.phone_number ?? null,
-        phoneVerified: Boolean(ctx.token.phone_number),
+        phone: rawPhone,
+        normalizedPhone: normalizedPhone || null,
+        phoneHash: pHash || null,
+        phoneVerified: Boolean(rawPhone),
         displayName: '',
         avatarUrl: null,
         bio: null,
@@ -96,7 +121,16 @@ export const bootstrapUser = miloOnCall(
     if (data.status === 'banned') {
       fail('FORBIDDEN', 'This account has been permanently closed.');
     }
-    await ref.set({ lastActiveAt: FieldValue.serverTimestamp() }, { merge: true });
+    await ref.set(
+      {
+        phone: rawPhone ?? data.phone ?? null,
+        normalizedPhone: normalizedPhone || data.normalizedPhone || null,
+        phoneHash: pHash || data.phoneHash || null,
+        lastActiveAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
     return { isNewUser: false, roles };
   },
 );

@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../theme/milo_theme.dart';
 
 /// S-48 · Manual Lookup & Offline Gate Mode Screen
-/// For Gate Leads: Lookup ticket via booking ref (MILO-######) + last 4 digits of phone
+/// For Gate Leads: Lookup ticket via booking ref (JHOOMO-######) + last 4 digits of phone
 /// Offline gate manifest status with local reconciliation queue
 class GateManualLookupScreen extends StatefulWidget {
  final String eventId;
@@ -55,7 +55,7 @@ class _GateManualLookupScreenState extends State<GateManualLookupScreen> {
  setState(() {
  _isSearching = false;
  _foundTicket = {
- 'ref': ref.startsWith('MILO-') ? ref : 'MILO-$ref',
+ 'ref': ref.startsWith('JHOOMO-') ? ref : 'JHOOMO-$ref',
  'attendee': 'Sahil K.',
  'phoneMasked': '+91 XXXXX XX$phone4',
  'tier': 'VIP Couple Pass (Admits 2)',
@@ -166,7 +166,7 @@ class _GateManualLookupScreenState extends State<GateManualLookupScreen> {
  textCapitalization: TextCapitalization.characters,
  style: GoogleFonts.inter(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
  decoration: InputDecoration(
- labelText: 'Booking Reference (MILO-######)',
+ labelText: 'Booking Reference (JHOOMO-######)',
  labelStyle: GoogleFonts.inter(color: Colors.white60),
  prefixIcon: const Icon(Icons.confirmation_number_outlined, color: Colors.white38),
  filled: true,

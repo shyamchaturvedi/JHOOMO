@@ -175,7 +175,7 @@ class _CreateBeaconScreenState extends State<CreateBeaconScreen> {
  const SizedBox(width: 12),
  Expanded(
  child: Text(
- 'Milo automatically notifies all accepted squad members 30 minutes before meetup with the Google Maps pin.',
+  'Jhoomo automatically notifies all accepted squad members 30 minutes before meetup with the Google Maps pin.',
  style: GoogleFonts.inter(color: MiloColors.textSecondary, fontSize: 11, height: 1.3),
  ),
  ),

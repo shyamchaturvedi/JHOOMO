@@ -3,6 +3,34 @@ import { onCall } from 'firebase-functions/https';
 import { logger } from 'firebase-functions';
 import { randomUUID } from 'node:crypto';
 import { toHttpsError } from './errors';
+import { MILO_KYC_DATA_KEY } from './envelope';
+import {
+  KYC_VENDOR_API_KEY,
+  KYC_VENDOR_BASE_URL,
+  SMS_DLT_SENDER_ID,
+  SMS_DLT_TEMPLATE_ID,
+  SMS_PROVIDER_API_KEY,
+} from './vendors';
+import {
+  RAZORPAY_KEY_ID,
+  RAZORPAY_KEY_SECRET,
+} from './razorpay';
+
+/**
+ * Secret params must be bound to the function declaration, otherwise calling
+ * `.value()` at runtime throws. Attach every integration secret the callables
+ * may touch so enabling a provider never silently disables the feature.
+ */
+const MILO_SECRETS = [
+  MILO_KYC_DATA_KEY,
+  KYC_VENDOR_API_KEY,
+  KYC_VENDOR_BASE_URL,
+  SMS_PROVIDER_API_KEY,
+  SMS_DLT_TEMPLATE_ID,
+  SMS_DLT_SENDER_ID,
+  RAZORPAY_KEY_ID,
+  RAZORPAY_KEY_SECRET,
+];
 
 export interface MiloCallableOptions<T = unknown> extends CallableOptions<T> {
   enforceAppCheck?: boolean;
@@ -29,6 +57,7 @@ export function miloOnCall<T = unknown, R = unknown>(
       region: 'asia-south1',
       enforceAppCheck: enforceAppCheck ?? appCheckEnforced(),
       ...rest,
+      secrets: [...(rest.secrets ?? []), ...MILO_SECRETS],
     },
     async (req) => {
       const requestId = requestIdOf(req as CallableRequest<unknown>);

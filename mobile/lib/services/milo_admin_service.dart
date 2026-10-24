@@ -511,7 +511,7 @@ class MiloAdminService extends ChangeNotifier {
  Map<String, dynamic> _mapSettlement(String id, Map<String, dynamic> data) => {
  'id': id,
  'organizer': data['organizer']?.toString() ?? 'Organizer',
- 'event': data['event']?.toString() ?? 'Milo Event',
+ 'event': data['event']?.toString() ?? 'Jhoomo Event',
  'gross_amount': (data['gross_amount'] as num?)?.toDouble() ?? 0,
  'platform_fee': (data['platform_fee'] as num?)?.toDouble() ?? 0,
  'net_payout': (data['net_payout'] as num?)?.toDouble() ?? 0,

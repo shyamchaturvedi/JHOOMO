@@ -147,7 +147,7 @@ class _BMSPickRegionSheetState extends State<BMSPickRegionSheet> {
  border: Border.all(color: const Color(0xFFF3F4F6)),
  ),
  child: Text(
- 'Milo collects your location data to recommend shows and events near you, send real-time alerts and venue notifications, and curate your feed for your area. Location is collected only while using the app.\nYou can turn location off anytime in Settings.',
+                'JHOOMO collects your location data to recommend shows and events near you, send real-time alerts and venue notifications, and curate your feed for your area. Location is collected only while using the app.\nYou can turn location off anytime in Settings.',
  style: GoogleFonts.inter(
  fontSize: 11,
  color: const Color(0xFF4B5563),

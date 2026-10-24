@@ -16,8 +16,58 @@ const vendors_1 = require("../shared/vendors");
 const notify_1 = require("../shared/notify");
 const ratelimit_1 = require("../shared/ratelimit");
 const audit_1 = require("../shared/audit");
+const uniqueness_1 = require("../shared/uniqueness");
 exports.AGREEMENT_VERSION = '1.0';
 const NAME_MATCH_THRESHOLD = 80;
+const ACTIVE_KYC_STATUSES = ['submitted', 'auto_verified', 'approved'];
+async function assertPanUnique(uid, key) {
+    if (!key)
+        return;
+    const snap = await (0, admin_1.db)().collection('organizers').where('panHash', '==', key).limit(10).get();
+    const conflict = snap.docs.find((doc) => doc.id !== uid && ACTIVE_KYC_STATUSES.includes(String(doc.data().kycStatus ?? '')));
+    if (conflict) {
+        (0, errors_1.fail)('ALREADY_REGISTERED', 'This PAN is already linked to another organizer account.');
+    }
+}
+async function assertBankUnique(uid, key) {
+    if (!key)
+        return;
+    const snap = await (0, admin_1.db)().collection('organizers').where('bankHash', '==', key).limit(10).get();
+    const conflict = snap.docs.find((doc) => doc.id !== uid && ACTIVE_KYC_STATUSES.includes(String(doc.data().kycStatus ?? '')));
+    if (conflict) {
+        (0, errors_1.fail)('ALREADY_REGISTERED', 'This bank account is already linked to another organizer account.');
+    }
+}
+/**
+ * Validates a deterministic uniqueness lock inside a transaction. Unlike a
+ * query re-check, writing the lock doc forces Firestore to serialise concurrent
+ * submissions for the same PAN/bank hash, so two organizers cannot both win.
+ * Reads and writes are split so transactions never read after writing.
+ */
+async function assertUniqueLockAvailable(tx, uid, field, key) {
+    if (!key)
+        return;
+    const lockSnap = await tx.get((0, admin_1.db)().collection('kycUniqueness').doc(`${field}_${key}`));
+    const ownerUid = String(lockSnap.data()?.uid ?? '');
+    if (ownerUid && ownerUid !== uid) {
+        const ownerSnap = await tx.get((0, admin_1.db)().collection('organizers').doc(ownerUid));
+        if (ACTIVE_KYC_STATUSES.includes(String(ownerSnap.data()?.kycStatus ?? ''))) {
+            (0, errors_1.fail)('ALREADY_REGISTERED', field === 'pan'
+                ? 'This PAN is already linked to another organizer account.'
+                : 'This bank account is already linked to another organizer account.');
+        }
+    }
+}
+function writeUniqueLock(tx, uid, field, key) {
+    if (!key)
+        return;
+    tx.set((0, admin_1.db)().collection('kycUniqueness').doc(`${field}_${key}`), {
+        uid,
+        field,
+        hash: key,
+        updatedAt: firestore_1.FieldValue.serverTimestamp(),
+    }, { merge: true });
+}
 const ENTITY_BY_PAN_CHAR = {
     P: 'individual',
     C: 'company',
@@ -80,6 +130,8 @@ exports.saveKycDraft = (0, callable_1.miloOnCall)({}, async (req) => {
     if (step === 1 && raw.step1) {
         const data = step1Schema.parse(raw.step1);
         const entityType = ENTITY_BY_PAN_CHAR[data.pan.charAt(3)] ?? 'other';
+        const panKey = (0, uniqueness_1.panHash)(data.pan);
+        await assertPanUnique(ctx.uid, panKey);
         const panCheck = await (0, vendors_1.verifyPan)(data.pan);
         let legalName = data.legalName;
         if (panCheck.status === 'valid' && panCheck.nameOnRecord) {
@@ -89,6 +141,7 @@ exports.saveKycDraft = (0, callable_1.miloOnCall)({}, async (req) => {
         patch.entityType = entityType;
         patch.legalName = legalName;
         patch.panMasked = (0, crypto_1.maskPan)(data.pan);
+        patch.panHash = panKey;
         patch.aadhaarLinked = panCheck.aadhaarLinked ?? data.aadhaarLinked;
         patch.addressSummary = {
             city: data.address.city,
@@ -119,6 +172,8 @@ exports.saveKycDraft = (0, callable_1.miloOnCall)({}, async (req) => {
         if (data.bankAccountNumber !== data.confirmAccountNumber) {
             (0, errors_1.fail)('INVALID_INPUT', 'The account numbers do not match.');
         }
+        const bankKey = (0, uniqueness_1.bankAccountHash)(data.bankAccountNumber, data.ifsc);
+        await assertBankUnique(ctx.uid, bankKey);
         const privateRef = (0, admin_1.db)().collection('organizerPrivate').doc(ctx.uid);
         await privateRef.set({
             bankAccountEnc: (0, envelope_1.encryptField)(data.bankAccountNumber),
@@ -134,6 +189,7 @@ exports.saveKycDraft = (0, callable_1.miloOnCall)({}, async (req) => {
             verified: false,
             changedAt: firestore_1.FieldValue.serverTimestamp(),
         };
+        patch.bankHash = bankKey;
     }
     await organizerRef.set(patch, { merge: true });
     return { ok: true, kycStep: step, kycStatus: patch.kycStatus ?? status };
@@ -225,6 +281,32 @@ exports.submitKyc = (0, callable_1.miloOnCall)({}, async (req) => {
         (0, errors_1.fail)('INVALID_INPUT', 'Complete step 1 before submitting.');
     if (!priv.bankAccountEnc)
         (0, errors_1.fail)('INVALID_INPUT', 'Complete step 3 before submitting.');
+    await (0, admin_1.db)().runTransaction(async (tx) => {
+        const fresh = await tx.get(organizerRef);
+        const data = fresh.data() ?? {};
+        const freshStatus = String(data.kycStatus ?? 'none');
+        if (ACTIVE_KYC_STATUSES.includes(freshStatus)) {
+            (0, errors_1.fail)('CONFLICT', 'Your KYC has already been submitted.');
+        }
+        const panKey = String(data.panHash ?? '');
+        if (panKey) {
+            const conflicts = await tx.get((0, admin_1.db)().collection('organizers').where('panHash', '==', panKey).limit(10));
+            if (conflicts.docs.some((doc) => doc.id !== ctx.uid && ACTIVE_KYC_STATUSES.includes(String(doc.data().kycStatus ?? '')))) {
+                (0, errors_1.fail)('ALREADY_REGISTERED', 'This PAN is already linked to another organizer account.');
+            }
+        }
+        const bankKey = String(data.bankHash ?? '');
+        if (bankKey) {
+            const conflicts = await tx.get((0, admin_1.db)().collection('organizers').where('bankHash', '==', bankKey).limit(10));
+            if (conflicts.docs.some((doc) => doc.id !== ctx.uid && ACTIVE_KYC_STATUSES.includes(String(doc.data().kycStatus ?? '')))) {
+                (0, errors_1.fail)('ALREADY_REGISTERED', 'This bank account is already linked to another organizer account.');
+            }
+        }
+        await assertUniqueLockAvailable(tx, ctx.uid, 'pan', panKey);
+        await assertUniqueLockAvailable(tx, ctx.uid, 'bank', bankKey);
+        writeUniqueLock(tx, ctx.uid, 'pan', panKey);
+        writeUniqueLock(tx, ctx.uid, 'bank', bankKey);
+    });
     const eventsRef = organizerRef.collection('kycEvents').doc();
     await eventsRef.set({
         type: 'submitted',

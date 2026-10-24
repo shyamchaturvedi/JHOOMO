@@ -3,7 +3,13 @@ import { logger } from 'firebase-functions';
 import { onRequest } from 'firebase-functions/https';
 import { randomBytes } from 'node:crypto';
 import { db } from '../shared/admin';
-import { createRefund, verifyWebhookSignature } from '../shared/razorpay';
+import {
+  createRefund,
+  RAZORPAY_KEY_ID,
+  RAZORPAY_KEY_SECRET,
+  RAZORPAY_WEBHOOK_SECRET,
+  verifyWebhookSignature,
+} from '../shared/razorpay';
 import { notifyUser } from '../shared/notify';
 import { confirmInventory, releaseInventory } from './inventory';
 import { incrementPromoUsage } from './promo';
@@ -33,7 +39,10 @@ interface WebhookPayload {
 }
 
 export const razorpayWebhook = onRequest(
-  { region: 'asia-south1', secrets: [] },
+  {
+    region: 'asia-south1',
+    secrets: [RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET],
+  },
   async (req, res) => {
     const signature = req.header('x-razorpay-signature') ?? '';
     const rawBody = req.rawBody ?? Buffer.from(JSON.stringify(req.body ?? {}));
@@ -115,7 +124,6 @@ async function handleCaptured(
   const ticketIds: string[] = [];
   const ticketDocs: Array<{ id: string; data: Record<string, unknown> }> = [];
   const secretDocs: Array<{ id: string; data: Record<string, unknown> }> = [];
-  const attendeeDocs: Array<{ id: string; data: Record<string, unknown> }> = [];
 
   const items = (found.data.items ?? []) as Array<{
     tierId: string;
@@ -168,22 +176,16 @@ async function handleCaptured(
     }
   }
 
-  const attendeeId = `${found.data.eventId}_${found.data.userId}`;
-  attendeeDocs.push({
-    id: attendeeId,
-    data: {
-      schemaVersion: 1,
-      eventId: found.data.eventId,
-      uid: found.data.userId,
-      ticketCount: ticketIds.length,
-      firstTicketAt: FieldValue.serverTimestamp(),
-      radarOptIn: false,
-      incognito: user.privacy?.incognito === true,
-    },
-  });
+  const attendeeRef = db()
+    .collection('eventAttendees')
+    .doc(`${found.data.eventId}_${found.data.userId}`);
 
   await db().runTransaction(async (tx) => {
-    const bookingSnap = await tx.get(found.ref);
+    const [bookingSnap, attendeeSnap, paymentSnap] = await Promise.all([
+      tx.get(found.ref),
+      tx.get(attendeeRef),
+      tx.get(paymentRef),
+    ]);
     const status = bookingSnap.data()?.status;
     if (status === 'confirmed' || status === 'completed') return;
     if (status === 'cancelled_by_user') {
@@ -206,9 +208,22 @@ async function handleCaptured(
 
     for (const doc of ticketDocs) tx.set(db().collection('tickets').doc(doc.id), doc.data);
     for (const doc of secretDocs) tx.set(db().collection('ticketSecrets').doc(doc.id), doc.data);
-    for (const doc of attendeeDocs) tx.set(db().collection('eventAttendees').doc(doc.id), doc.data);
 
-    const paymentSnap = await tx.get(paymentRef);
+    const existingAttendee = attendeeSnap.data();
+    tx.set(
+      attendeeRef,
+      {
+        schemaVersion: 1,
+        eventId: found.data.eventId,
+        uid: found.data.userId,
+        ticketCount: FieldValue.increment(ticketIds.length),
+        firstTicketAt: existingAttendee?.firstTicketAt ?? FieldValue.serverTimestamp(),
+        radarOptIn: existingAttendee?.radarOptIn ?? false,
+        incognito: user.privacy?.incognito === true,
+      },
+      { merge: true },
+    );
+
     const webhookEventIds: string[] = (paymentSnap.data()?.webhookEventIds ?? []) as string[];
     tx.set(
       paymentRef,

@@ -6,47 +6,84 @@ import { releaseInventory } from '../booking/inventory';
 import { notifyUser } from '../shared/notify';
 import { istDateKey } from '../shared/time';
 
+type ExpirableHoldStatus = 'pending_payment' | 'pending_approval';
+
 /**
- * Releases inventory held by abandoned checkouts (§13.3 `expireReservations`).
- * Runs every minute so a held seat never blocks another buyer for long.
+ * Releases inventory held by abandoned checkouts and ignored manual-payment
+ * requests (§13.3 `expireReservations`). Runs every minute so a held seat never
+ * blocks another buyer for long.
  */
 export const expireReservations = onSchedule(
   { schedule: 'every 1 minutes', region: 'asia-south1', maxInstances: 1 },
   async () => {
     const now = Timestamp.now();
-    const stale = await db()
-      .collection('bookings')
-      .where('status', '==', 'pending_payment')
-      .where('reservationExpiresAt', '<=', now)
-      .limit(200)
-      .get();
-
-    let expired = 0;
-    for (const doc of stale.docs) {
-      const booking = doc.data();
-      const updated = await db()
-        .collection('bookings')
-        .doc(doc.id)
-        .update({
-          status: 'expired',
-          updatedAt: FieldValue.serverTimestamp(),
-        })
-        .then(() => true)
-        .catch(() => false);
-      if (!updated) continue;
-
-      const allocations = (booking.reservation?.shards ?? []) as Array<{
-        tierId: string;
-        shard: string;
-        qty: number;
-      }>;
-      await releaseInventory(String(booking.eventId), allocations).catch(() => undefined);
-      expired += 1;
-    }
+    const [timedOut, manualTimedOut] = await Promise.all([
+      expireStaleHolds('pending_payment', now),
+      expireStaleHolds('pending_approval', now),
+    ]);
+    const expired = timedOut + manualTimedOut;
 
     if (expired > 0) logger.info('expireReservations.complete', { expired });
   },
 );
+
+async function expireStaleHolds(status: ExpirableHoldStatus, now: Timestamp): Promise<number> {
+  const stale = await db()
+    .collection('bookings')
+    .where('status', '==', status)
+    .where('reservationExpiresAt', '<=', now)
+    .limit(200)
+    .get();
+
+  let expired = 0;
+  for (const doc of stale.docs) {
+    const booking = doc.data();
+    const bookingRef = db().collection('bookings').doc(doc.id);
+
+    const updated = await db()
+      .runTransaction(async (tx) => {
+        const fresh = await tx.get(bookingRef);
+        const data = fresh.data();
+        if (!data || data.status !== status) return false;
+        const expiresAt = data.reservationExpiresAt as Timestamp | undefined;
+        if (!expiresAt || expiresAt.toMillis() > now.toMillis()) return false;
+
+        tx.update(bookingRef, {
+          status: 'expired',
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        const requestId = String(data.manualRequestId ?? '');
+        if (status === 'pending_approval' && requestId) {
+          tx.update(db().collection('payment_requests').doc(requestId), {
+            status: 'EXPIRED',
+            updated_at: FieldValue.serverTimestamp(),
+          });
+        }
+        return true;
+      })
+      .catch(() => false);
+    if (!updated) continue;
+
+    const allocations = (booking.reservation?.shards ?? []) as Array<{
+      tierId: string;
+      shard: string;
+      qty: number;
+    }>;
+    await releaseInventory(String(booking.eventId), allocations).catch(() => undefined);
+    await notifyUser(
+      String(booking.userId),
+      status === 'pending_approval' ? 'payment_expired' : 'booking_expired',
+      status === 'pending_approval' ? 'Payment request expired' : 'Booking hold expired',
+      status === 'pending_approval'
+        ? 'The organizer did not verify your payment in time. Your seats have been released; please contact support if you already paid.'
+        : 'Your held seats have been released. You can start a new booking.',
+      { deepLink: '/my-tickets', channel: 'bookings' },
+    ).catch(() => undefined);
+    expired += 1;
+  }
+  return expired;
+}
 
 /**
  * Sends the 24-hour and 2-hour event reminders (§14). Reminders are marked on

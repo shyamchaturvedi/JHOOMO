@@ -133,7 +133,7 @@ class _BankAccountSettingsScreenState extends State<BankAccountSettingsScreen> {
  _buildTextField(_upiIdCtrl, 'username@bankupi'),
  const SizedBox(height: 24),
 
- // Platform Escrow Policy Reminder
+ // Platform Safe Payment Policy Reminder
  Container(
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
@@ -148,7 +148,7 @@ class _BankAccountSettingsScreenState extends State<BankAccountSettingsScreen> {
  const SizedBox(width: 10),
  Expanded(
  child: Text(
- 'Milo holds event ticket proceeds in escrow. Payouts are automatically processed to this bank account within 3-5 business days after your event check-ins are verified.',
+  'Jhoomo holds event ticket proceeds safely. Payouts are automatically processed to this bank account within 3-5 business days after your event check-ins are verified.',
  style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 11, height: 1.4),
  ),
  ),

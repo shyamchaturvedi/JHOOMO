@@ -33,7 +33,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
  'time': '11:15 AM',
  },
  {
- 'text': 'Yes! Got my pass booked through Milo. The DJ line-up looks insane! ',
+ 'text': 'Yes! Got my pass booked through Jhoomo. The DJ line-up looks insane! ',
  'isMe': true,
  'time': '11:18 AM',
  },
@@ -60,7 +60,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
 
  @override
  Widget build(BuildContext context) {
- final displayName = widget.user?.name ?? widget.peerName ?? widget.userName ?? 'Milo Attendee';
+  final displayName = widget.user?.name ?? widget.peerName ?? widget.userName ?? 'Jhoomo Attendee';
  final avatarUrl = widget.user?.avatarUrl ??
  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80';
 
@@ -136,7 +136,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
  const Icon(Icons.lock_rounded, size: 13, color: MiloColors.primaryLight),
  const SizedBox(width: 6),
  Text(
- '256-Bit Encrypted Milo Social Vibe Chat',
+ '256-Bit Encrypted Jhoomo Social Vibe Chat',
  style: GoogleFonts.inter(fontSize: 11, color: MiloColors.textSecondary, fontWeight: FontWeight.w600),
  ),
  ],

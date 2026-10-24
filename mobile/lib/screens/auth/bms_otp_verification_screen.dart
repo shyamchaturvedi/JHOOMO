@@ -126,7 +126,7 @@ class _BMSOTPVerificationScreenState extends State<BMSOTPVerificationScreen> {
  mainAxisSize: MainAxisSize.min,
  children: [
  Text(
- 'milo',
+  'jhoomo',
  style: GoogleFonts.inter(
  fontSize: 22,
  fontWeight: FontWeight.w900,
