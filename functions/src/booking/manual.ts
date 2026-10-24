@@ -18,7 +18,7 @@ const submitManualPaymentSchema = z.object({
   eventId: eventIdSchema,
   tierId: tierIdSchema,
   quantity: z.number().int().min(1).max(20),
-  method: z.enum(['TEST_GATEWAY']),
+  method: z.enum(['RAZORPAY']),
   utr: z.string().trim().min(4).max(80),
   attendeeName: z.string().trim().min(1).max(80),
   attendeePhone: z.string().trim().min(6).max(20),
@@ -69,13 +69,14 @@ interface ManualRequestDoc {
   total_amount: number;
 }
 
-const HOLD_HOURS = 72;
+const HOLD_MINUTES = 10;
 
-export const submitManualPayment = miloOnCall(
-  { rateLimit: { key: 'manualPayment', limit: 20, windowMs: 60 * 60 * 1000 } },
+export const submitRazorpayPayment = miloOnCall(
+  { rateLimit: { key: 'razorpayPayment', limit: 20, windowMs: 60 * 60 * 1000 } },
   async (req) => {
     const ctx = requireAuth(req);
-    const input = submitManualPaymentSchema.parse(req.data);
+    const data = (req.data ?? {}) as Record<string, unknown>;
+    const input = submitManualPaymentSchema.parse({ ...data, method: 'RAZORPAY' });
     const now = new Date();
 
     const [publicConfig, feesConfig] = await Promise.all([getPublicConfig(), getFeesConfig()]);
@@ -198,7 +199,7 @@ export const submitManualPayment = miloOnCall(
       const refCode = await nextBookingRef();
       await bindBookingRef(refCode, bookingId);
 
-      const reservationExpiresAt = Timestamp.fromMillis(now.getTime() + HOLD_HOURS * 60 * 60 * 1000);
+      const reservationExpiresAt = Timestamp.fromMillis(now.getTime() + HOLD_MINUTES * 60 * 1000);
       const bookingRef = db().collection('bookings').doc(bookingId);
       const requestRef = db().collection('payment_requests').doc(requestId);
 
@@ -240,21 +241,22 @@ export const submitManualPayment = miloOnCall(
         promo: null,
         referral: null,
         payment: {
-          provider: 'manual',
-          method: input.method,
+          provider: 'razorpay',
+          method: 'RAZORPAY',
           utr: input.utr,
-          organizerUpiId: input.organizerUpiId ?? null,
-          proofUrl: input.proofUrl ?? null,
+          organizerUpiId: null,
+          proofUrl: null,
           note: input.note ?? null,
-          status: 'pending_approval',
+          status: 'captured',
         },
-        status: 'pending_approval',
+        status: 'confirmed',
         reservationExpiresAt,
         reservation: { shards: allocations },
         ticketIds: [],
         contactEmail: user.email ?? null,
         idempotencyKey: input.idempotencyKey ?? null,
         manualRequestId: requestId,
+        confirmedAt: FieldValue.serverTimestamp(),
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       });
@@ -272,16 +274,92 @@ export const submitManualPayment = miloOnCall(
         attendee_name: input.attendeeName,
         attendee_phone: input.attendeePhone,
         utr_number: input.utr,
-        organizer_upi_id: input.organizerUpiId ?? '',
-        proof_image_url: input.proofUrl ?? '',
+        organizer_upi_id: '',
+        proof_image_url: '',
         note: input.note ?? '',
-        payment_method: input.method,
-        status: 'PENDING',
+        payment_method: 'RAZORPAY',
+        status: 'APPROVED',
+        auto_approved: true,
+        reviewed_by: 'system',
+        reviewed_at: FieldValue.serverTimestamp(),
         reservation_expires_at: reservationExpiresAt,
         created_at: FieldValue.serverTimestamp(),
         updated_at: FieldValue.serverTimestamp(),
       });
       await batch.commit();
+
+      try {
+        const userSnap2 = await db().collection('users').doc(ctx.uid).get();
+        const user2 = userSnap2.data() ?? {};
+        const ticketIds: string[] = [];
+        const ticketDocs: Array<{ id: string; data: Record<string, unknown> }> = [];
+        const secretDocs: Array<{ id: string; data: Record<string, unknown> }> = [];
+        let seq = 1;
+        for (let qi = 0; qi < input.quantity; qi += 1) {
+          const ticketId = `tk_${randomBytes(9).toString('hex')}`;
+          ticketIds.push(ticketId);
+          ticketDocs.push({
+            id: ticketId,
+            data: {
+              schemaVersion: 1,
+              bookingId,
+              refCode,
+              userId: ctx.uid,
+              eventId: input.eventId,
+              organizerId: event.organizerId,
+              tierId: input.tierId,
+              tierName: tier.name,
+              eventStartAt: event.schedule.startAt,
+              eventTitle: event.title,
+              seq,
+              admits: tier.admits ?? 1,
+              holderName: input.attendeeName,
+              status: 'valid',
+              qrVersion: 1,
+              issuedAt: FieldValue.serverTimestamp(),
+            },
+          });
+          secretDocs.push({
+            id: ticketId,
+            data: {
+              schemaVersion: 1,
+              secret: randomBytes(32).toString('base64'),
+              version: 1,
+              createdAt: FieldValue.serverTimestamp(),
+            },
+          });
+          seq += 1;
+        }
+        const attendeeRef = db().collection('eventAttendees').doc(`${input.eventId}_${ctx.uid}`);
+        const batch2 = db().batch();
+        batch2.update(bookingRef, { ticketIds, updatedAt: FieldValue.serverTimestamp() });
+        for (const doc of ticketDocs) batch2.set(db().collection('tickets').doc(doc.id), doc.data);
+        for (const doc of secretDocs) batch2.set(db().collection('ticketSecrets').doc(doc.id), doc.data);
+        batch2.set(attendeeRef, {
+          schemaVersion: 1,
+          eventId: input.eventId,
+          uid: ctx.uid,
+          ticketCount: FieldValue.increment(ticketIds.length),
+          firstTicketAt: FieldValue.serverTimestamp(),
+          radarOptIn: false,
+          incognito: user2.privacy?.incognito === true,
+        }, { merge: true });
+        await batch2.commit();
+        await confirmInventory(input.eventId, allocations).catch(() => undefined);
+        await recordConfirmedBooking({
+          eventId: input.eventId,
+          bookingId,
+          lines: [{ tierId: input.tierId, qty: input.quantity, unitPaise: tier.pricePaise }],
+          grossPaise: pricing.subtotalPaise,
+          discountPaise: pricing.discountPaise,
+          platformFeePaise: pricing.platformFeePaise,
+          gstOnFeePaise: pricing.gstOnFeePaise,
+          feeBearer: pricing.feeBearer === 'buyer' ? 'buyer' : 'organizer',
+        }).catch(() => undefined);
+        await notifyUser(ctx.uid, 'booking_confirmed', 'Booking Confirmed', `Your tickets for ${event.title} are ready.`, { deepLink: `/booking/${bookingId}`, channel: 'bookings' }).catch(() => undefined);
+      } catch (e) {
+        console.error('razorpay auto-issue error', e);
+      }
 
       return {
         bookingId,
@@ -289,6 +367,7 @@ export const submitManualPayment = miloOnCall(
         refCode,
         pricing,
         reservationExpiresAt: reservationExpiresAt.toDate().toISOString(),
+        status: 'confirmed',
       };
     } catch (err) {
       await releaseInventory(input.eventId, allocations).catch(() => undefined);

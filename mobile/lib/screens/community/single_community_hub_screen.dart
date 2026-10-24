@@ -305,7 +305,7 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
           }
 
           final livePosts = snapshot.data ?? const <CommunityPost>[];
-          final posts = livePosts.isNotEmpty ? livePosts : _defaultCuratedPosts;
+          final posts = livePosts.where((post) => post.authorRole != 'ATTENDEE').toList();
           final filtered = _selectedRoleFilter == 'ALL'
               ? posts
               : posts
@@ -335,22 +335,22 @@ class _SingleCommunityHubScreenState extends State<SingleCommunityHubScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              if (filtered.isEmpty)
-                _EmptyState(
-                  hasFilter: _selectedRoleFilter != 'ALL',
-                  canPublish: CommunityService.instance.canPublish,
-                  onPost: _openCreatePost,
-                )
-              else
-                ...filtered.map(
-                  (post) => _PostCard(
-                    post: post,
-                    onLike: () => _toggleLike(post),
-                    onComments: () => _openComments(post),
-                    onShare: () => _sharePost(post),
-                    onCollab: () => _requestCollab(post),
-                  ),
-                ),
+          if (filtered.isEmpty)
+            _EmptyState(
+              hasFilter: _selectedRoleFilter != 'ALL',
+              canPublish: CommunityService.instance.canPublish,
+              onPost: CommunityService.instance.canPublish ? _openCreatePost : null,
+            )
+          else
+            ...filtered.map(
+              (post) => _PostCard(
+                post: post,
+                onLike: () => _toggleLike(post),
+                onComments: () => _openComments(post),
+                onShare: () => _sharePost(post),
+                onCollab: () => _requestCollab(post),
+              ),
+            ),
               const SizedBox(height: 60),
             ],
           );
@@ -1286,12 +1286,12 @@ class _EmptyState extends StatelessWidget {
   const _EmptyState({
     required this.hasFilter,
     required this.canPublish,
-    required this.onPost,
+    this.onPost,
   });
 
   final bool hasFilter;
   final bool canPublish;
-  final VoidCallback onPost;
+  final VoidCallback? onPost;
 
   @override
   Widget build(BuildContext context) {
@@ -1332,21 +1332,21 @@ class _EmptyState extends StatelessWidget {
               height: 1.4,
             ),
           ),
-          if (canPublish) ...[
+          if (canPublish && onPost != null) ...[
             const SizedBox(height: 16),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: MiloColors.primary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
               onPressed: onPost,
-              icon: const Icon(Icons.add_rounded, color: Colors.white, size: 18),
+              icon: const Icon(Icons.add_rounded, color: MiloColors.bg),
               label: Text(
-                'Create first post',
+                'Create post',
                 style: GoogleFonts.inter(
-                  color: Colors.white,
+                  color: MiloColors.bg,
                   fontWeight: FontWeight.w800,
                 ),
               ),

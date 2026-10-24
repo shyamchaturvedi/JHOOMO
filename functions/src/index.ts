@@ -16,7 +16,7 @@ export {
 export { becomePromoter, requestPromoterPayout } from './customer/promoter';
 
 export { createBooking, applyPromo, cancelPendingBooking } from './booking/booking';
-export { submitManualPayment, reviewManualPayment } from './booking/manual';
+export { submitRazorpayPayment as submitManualPayment, reviewManualPayment } from './booking/manual';
 export { getTicketQrToken, generateTicketPdf } from './booking/tickets';
 export { requestRefund, organizerApproveRefund, organizerRejectRefund } from './booking/refunds';
 export { razorpayWebhook } from './booking/webhooks';

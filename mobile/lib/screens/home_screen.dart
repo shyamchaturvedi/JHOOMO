@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:async';
 import '../services/milo_db_service.dart';
-import '../services/mock_data.dart';
 import '../models/models.dart';
 import '../theme/milo_theme.dart';
 import 'event_details_screen.dart';
@@ -79,22 +79,18 @@ class _HomeScreenState extends State<HomeScreen> {
  super.dispose();
  }
 
- Future<void> _loadLiveData() async {
+  Future<void> _loadLiveData() async {
  try {
  final events = await MiloDbService.instance.getEvents();
- if (mounted && events.isNotEmpty) {
+ if (mounted) {
  setState(() {
  _liveEvents = events;
- });
- } else if (mounted) {
- setState(() {
- _liveEvents = MockData.events;
  });
  }
  } catch (e) {
  if (mounted) {
  setState(() {
- _liveEvents = MockData.events;
+ _liveEvents = [];
  });
  }
  }
@@ -111,9 +107,30 @@ class _HomeScreenState extends State<HomeScreen> {
  }
  }
 
- @override
+  @override
  Widget build(BuildContext context) {
- final sourceEvents = _liveEvents.isNotEmpty ? _liveEvents : MockData.events;
+ final sourceEvents = _liveEvents;
+ if (sourceEvents.isEmpty) {
+   return Scaffold(
+     backgroundColor: JhoomoTokens.surface,
+     body: SafeArea(
+       child: Center(
+         child: Column(
+           mainAxisSize: MainAxisSize.min,
+           children: [
+             Icon(Icons.event_busy_rounded, color: JhoomoTokens.textMuted, size: 48),
+             const SizedBox(height: 12),
+             Text('No events available',
+                 style: GoogleFonts.inter(color: JhoomoTokens.onSurface, fontWeight: FontWeight.w700)),
+             const SizedBox(height: 6),
+             Text('Check back soon for upcoming events',
+                 style: GoogleFonts.inter(color: JhoomoTokens.textMuted, fontSize: 12)),
+           ],
+         ),
+       ),
+     ),
+   );
+ }
  final cityEvents = sourceEvents.where((e) {
  return e.city.toLowerCase() == _selectedCity.toLowerCase();
  }).toList();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/milo_theme.dart';
-import '../services/mock_data.dart';
+
 import 'chat/chat_conversation_screen.dart';
 import 'chat/universal_broadcast_channel_screen.dart';
 
@@ -344,10 +344,17 @@ class _ChatListScreenState extends State<ChatListScreen>
 
     return ListTile(
       onTap: () {
-        final matchingEvent = MockData.events.firstWhere(
-          (e) => b.title.toLowerCase().contains(e.title.toLowerCase()),
-          orElse: () => MockData.events.first,
-        );
+        EventModel? matchingEvent;
+        final allEvents = await MiloDbService.instance.getEvents();
+        if (allEvents.isNotEmpty) {
+          try {
+            matchingEvent = allEvents.firstWhere(
+              (e) => e.title.toLowerCase().contains(keyword.toLowerCase()),
+            );
+          } catch (_) {
+            matchingEvent = allEvents.first;
+          }
+        }
 
         Navigator.push(
           context,

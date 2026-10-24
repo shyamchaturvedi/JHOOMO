@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/mock_data.dart';
+
 import '../theme/milo_theme.dart';
 import 'event_details_screen.dart';
 
@@ -9,7 +9,8 @@ class DandiyaSpecialScreen extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final dandiyaEvents = MockData.events.where((e) => e.category.toLowerCase().contains('dandiya') || e.category.toLowerCase().contains('garba')).toList();
+ final allEvents = MiloDbService.instance.watchEvents();
+ // Use live events from stream; keep empty if none
 
  return Scaffold(
  backgroundColor: MiloColors.bg,

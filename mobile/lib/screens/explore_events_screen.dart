@@ -1,10 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/milo_db_service.dart';
+import 'dart:ui';
 import '../models/models.dart';
-import '../services/mock_data.dart';
 import '../theme/milo_theme.dart';
+import '../services/milo_db_service.dart';
 import 'event_details_screen.dart';
 
 class ExploreEventsScreen extends StatefulWidget {
@@ -38,10 +38,16 @@ class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
  _loadEvents();
  }
 
- Future<void> _loadEvents() async {
- final events = await MiloDbService.instance.getEvents();
- if (mounted) {
- setState(() => _liveEvents = events);
+  Future<void> _loadEvents() async {
+ try {
+   final events = await MiloDbService.instance.getEvents();
+   if (mounted) {
+     setState(() => _liveEvents = events);
+   }
+ } catch (e) {
+   if (mounted) {
+     setState(() => _liveEvents = []);
+   }
  }
  }
 
@@ -173,9 +179,30 @@ class _ExploreEventsScreenState extends State<ExploreEventsScreen> {
  );
  }
 
- @override
+  @override
  Widget build(BuildContext context) {
- final sourceEvents = _liveEvents.isNotEmpty ? _liveEvents : MockData.events;
+ final sourceEvents = _liveEvents;
+ if (sourceEvents.isEmpty) {
+   return Scaffold(
+     backgroundColor: MiloColors.bg,
+     body: SafeArea(
+       child: Center(
+         child: Column(
+           mainAxisSize: MainAxisSize.min,
+           children: [
+             Icon(Icons.search_off_rounded, color: MiloColors.textMuted, size: 48),
+             const SizedBox(height: 12),
+             Text('No events found',
+                 style: GoogleFonts.inter(color: MiloColors.textPrimary, fontWeight: FontWeight.w700)),
+             const SizedBox(height: 6),
+             Text('Try changing filters or check back later',
+                 style: GoogleFonts.inter(color: MiloColors.textMuted, fontSize: 12)),
+           ],
+         ),
+       ),
+     ),
+   );
+ }
  var filteredEvents = sourceEvents.where((e) {
  final cleanCat = _selectedCategory.replaceAll(RegExp(r'[^\w\s/&]'), '').trim();
  final matchesCat = _selectedCategory == 'All' || e.category.toLowerCase().contains(cleanCat.toLowerCase());

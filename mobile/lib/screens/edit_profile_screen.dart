@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/milo_theme.dart';
+import '../services/milo_auth_service.dart';
+import '../services/milo_api.dart';
+import '../services/milo_session_service.dart';
 
 /// S-27 · Edit Profile Screen
 /// Allows updating display name, bio (<= 160 chars), city, gender, email, and interests.
@@ -52,7 +55,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
  super.dispose();
  }
 
- void _saveProfile() async {
+  void _saveProfile() async {
  if (_nameCtrl.text.trim().isEmpty) {
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(content: Text('Display name cannot be empty')),
@@ -61,18 +64,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
  }
 
  setState(() => _isSaving = true);
- await Future.delayed(const Duration(milliseconds: 600));
-
- if (!mounted) return;
- setState(() => _isSaving = false);
+ try {
+ await MiloApi.instance.completeProfile(
+ displayName: _nameCtrl.text.trim(),
+ dobIso: '',
+ cityId: _cityCtrl.text.trim(),
+ gender: _gender.toLowerCase(),
+ interests: _selectedInterests.toList(),
+ bio: _bioCtrl.text.trim(),
+ consents: const [
+ {'type': 'terms', 'granted': true},
+ {'type': 'privacy', 'granted': true},
+ ],
+ );
+ if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(
- content: Text('Profile updated and synchronized with Radar.'),
+ content: Text('Profile updated successfully.'),
  backgroundColor: MiloColors.accentGreen,
  behavior: SnackBarBehavior.floating,
  ),
  );
  Navigator.pop(context);
+ }
+ } catch (e) {
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(content: Text('Failed to update profile: $e')),
+ );
+ }
+ } finally {
+ if (mounted) setState(() => _isSaving = false);
+ }
  }
 
  @override

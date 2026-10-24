@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import 'milo_api.dart';
-import 'mock_data.dart';
+
 import 'milo_db_service.dart';
 import 'milo_session_service.dart';
 
@@ -77,7 +77,9 @@ class PaymentApprovalService extends ChangeNotifier {
 
     final db = _db;
     if (db == null) {
-      _initLocalDemoData();
+      if (kDebugMode) {
+        _initLocalDemoData();
+      }
       _rebuildNotifications();
       notifyListeners();
       return;
@@ -85,7 +87,9 @@ class PaymentApprovalService extends ChangeNotifier {
 
     final uid = MiloSessionService.currentUid;
     if (uid.isEmpty) {
-      _initLocalDemoData();
+      if (kDebugMode) {
+        _initLocalDemoData();
+      }
       _rebuildNotifications();
       notifyListeners();
       return;
@@ -194,16 +198,14 @@ class PaymentApprovalService extends ChangeNotifier {
   void _initLocalDemoData() {
     if (!kDebugMode) return;
     if (_allTickets.isNotEmpty || _approvalRequests.isNotEmpty) return;
-    _allTickets.addAll(MockData.initialBookings);
-    _allTickets.insert(0, _demoPendingTicket());
-    _approvalRequests.addAll(_demoRequests());
+    // Skip demo data in release builds
   }
 
   BookedTicket _demoPendingTicket() {
     return BookedTicket(
       bookingId: 'JHOOMO-SELF-PAY-9842',
-      event: MockData.events[0],
-      tier: MockData.events[0].ticketTiers[1],
+      event: null,
+      tier: null,
       quantity: 1,
       totalAmount: 928,
       bookingTime: 'Today, 03:45 PM',
@@ -224,9 +226,9 @@ class PaymentApprovalService extends ChangeNotifier {
       PaymentApprovalRequest(
         id: 'REQ-101',
         bookingId: 'JHOOMO-SELF-PAY-9842',
-        eventId: MockData.events[0].id,
-        eventTitle: MockData.events[0].title,
-        tierName: MockData.events[0].ticketTiers[1].name,
+        eventId: '',
+        eventTitle: '',
+        tierName: '',
         quantity: 1,
         totalAmount: 928,
         attendeeName: 'Sahil (Verified)',
@@ -242,9 +244,9 @@ class PaymentApprovalService extends ChangeNotifier {
       PaymentApprovalRequest(
         id: 'REQ-102',
         bookingId: 'JHOOMO-SELF-PAY-7719',
-        eventId: MockData.events[1].id,
-        eventTitle: MockData.events[1].title,
-        tierName: MockData.events[1].ticketTiers[0].name,
+        eventId: '',
+        eventTitle: '',
+        tierName: '',
         quantity: 2,
         totalAmount: 1227,
         attendeeName: 'Priya Sharma',
@@ -264,6 +266,7 @@ class PaymentApprovalService extends ChangeNotifier {
   /// have real records on a fresh project. Debug builds only.
   Future<void> _seedDemoDataIfEmpty(FirebaseFirestore db) async {
     if (!kDebugMode) return;
+    return; // disabled for customer app live cleanup
     try {
       final demoBooking = _demoPendingTicket();
       final bookingRef = db.collection('bookings').doc(demoBooking.bookingId);
@@ -271,39 +274,7 @@ class PaymentApprovalService extends ChangeNotifier {
       if (!bookingSnap.exists) {
         await bookingRef.set(_bookingToDoc(demoBooking));
       }
-      final extraRef = db.collection('bookings').doc('JHOOMO-SELF-PAY-7719');
-      final extraSnap = await extraRef.get();
-      if (!extraSnap.exists) {
-        await extraRef.set({
-          'booking_ref': 'JHOOMO-SELF-PAY-7719',
-          'event_id': MockData.events[1].id,
-          'event_title': MockData.events[1].title,
-          'event_date': MockData.events[1].date,
-          'event_time': MockData.events[1].time,
-          'event_venue': MockData.events[1].venue,
-          'event_city': MockData.events[1].city,
-          'event_banner': MockData.events[1].imageUrl,
-          'event_organizer': MockData.events[1].organizerName,
-          'tier_id': MockData.events[1].ticketTiers[0].id,
-          'tier_name': MockData.events[1].ticketTiers[0].name,
-          'tier_price': MockData.events[1].ticketTiers[0].price,
-          'quantity': 2,
-          'total_amount': 1227,
-          'attendee_name': 'Priya Sharma',
-          'attendee_phone': '+91 98234 11029',
-          'user_name': 'Priya Sharma',
-          'user_phone': '+91 98234 11029',
-          'qr_hash_token': 'MILO_PENDING_APPROVAL_7719',
-          'payment_status': 'pending',
-          'status': 'PENDING_APPROVAL',
-          'payment_method': 'RAZORPAY',
-          'utr_number': '489201948502',
-          'organizer_upi_id': 'neonwave.events@icici',
-          'uid': '',
-          'checked_in': false,
-          'created_at': FieldValue.serverTimestamp(),
-        });
-      }
+      // Demo seed removed for production.
 
       for (final req in _demoRequests()) {
         final ref = db.collection('payment_requests').doc(req.id);
@@ -334,12 +305,13 @@ class PaymentApprovalService extends ChangeNotifier {
     String? organizerUpiId,
     String? proofImageUrl,
     String? note,
-    String paymentMethod = 'MILO_TEST_GATEWAY',
+    String paymentMethod = 'RAZORPAY',
   }) async {
     _lastActionError = null;
     final backendMethod = switch (paymentMethod) {
-      'MILO_TEST_GATEWAY' => 'TEST_GATEWAY',
-      _ => 'TEST_GATEWAY',
+      'RAZORPAY' => 'RAZORPAY',
+      'MILO_TEST_GATEWAY' => 'RAZORPAY',
+      _ => 'RAZORPAY',
     };
 
     try {

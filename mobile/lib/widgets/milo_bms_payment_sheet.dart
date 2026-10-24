@@ -144,7 +144,8 @@ class _MiloBmsPaymentSheetState extends State<MiloBmsPaymentSheet> {
             utrNumber: paymentId,
             attendeeName: name.isNotEmpty ? name : 'Verified Guest',
             attendeePhone: phone.isNotEmpty ? phone : '+91 9876543210',
-            note: 'Razorpay Verified Payment ID: $paymentId',
+            note: 'Razorpay Payment ID: $paymentId',
+            paymentMethod: 'RAZORPAY',
           );
           if (!mounted) return;
           Navigator.pop(context);
@@ -202,15 +203,15 @@ class _MiloBmsPaymentSheetState extends State<MiloBmsPaymentSheet> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
-                  color: MiloColors.amber,
+                  color: MiloColors.emerald,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.schedule_rounded,
+                child: const Icon(Icons.check_circle_rounded,
                     color: Colors.white, size: 40),
               ),
               const SizedBox(height: 18),
               Text(
-                'Payment Submitted for Verification',
+                'Booking Confirmed',
                 style: GoogleFonts.inter(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -218,7 +219,7 @@ class _MiloBmsPaymentSheetState extends State<MiloBmsPaymentSheet> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Your payment reference has been sent to the organizer. Your QR pass will be issued only after the payment is verified.',
+                'Payment successful. Your QR tickets are ready in My Tickets.',
                 style: GoogleFonts.inter(
                     color: MiloColors.textSecondary, fontSize: 13),
                 textAlign: TextAlign.center,

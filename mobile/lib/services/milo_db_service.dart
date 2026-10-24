@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
-import 'mock_data.dart';
+
 
 /// Database Service for Jhoomo App — backed by Firebase Firestore.
 /// Falls back to bundled mock data when Firestore is unreachable so the
@@ -29,45 +29,11 @@ class MiloDbService {
  if (db == null) return;
  _seeding = true;
  try {
- final eventsSnap = await db.collection('events').limit(1).get();
- if (eventsSnap.docs.isEmpty) {
- debugPrint('MiloDb: seeding events into Firestore...');
- final batch = db.batch();
- for (final event in MockData.events) {
- final ref = db.collection('events').doc(event.id);
- batch.set(ref, _eventToDoc(event));
- }
- await batch.commit();
- }
-
- final beaconsSnap = await db.collection('beacons').limit(1).get();
- if (beaconsSnap.docs.isEmpty) {
- final batch = db.batch();
- int i = 0;
- for (final beacon in MockData.liveBeacons) {
- i++;
- final ref = db.collection('beacons').doc('seed_$i');
- batch.set(ref, {
- 'id': 'seed_$i',
- 'creator_name': beacon.userName,
- 'activity_type': beacon.title,
- 'category': beacon.tag,
- 'location_name': beacon.location,
- 'squad_size_max': beacon.spotsLeft + 1,
- 'squad_size_current': 1,
- 'status': 'active',
- 'expires_at': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 2))),
- 'created_at': FieldValue.serverTimestamp(),
- });
- }
- await batch.commit();
- }
-
  // Admin allowlist (phone numbers that may grant Super Admin access).
  final adminDoc = await db.collection('milo_config').doc('admins').get();
  if (!adminDoc.exists) {
  await db.collection('milo_config').doc('admins').set({
- 'phones': ['9876543210', '7000000000'],
+ 'phones': [],
  'note': 'Add phone numbers (10 digit, no +91) allowed to select Super Admin role.',
  });
  }
@@ -145,7 +111,7 @@ class MiloDbService {
  }
  }
  }
- return MockData.events;
+ return [];
  }
 
  List<EventModel> _sortedByCreatedDesc(List<EventModel> events, List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
@@ -184,16 +150,19 @@ class MiloDbService {
  /// Realtime stream of live events (used by home/explore refresh).
  Stream<List<EventModel>> watchEvents() {
  final db = _db;
- if (db == null) return Stream.value(MockData.events);
+ if (db == null) return Stream.value([]);
  try {
  return db
  .collection('events')
  .where('status', isEqualTo: 'live')
  .snapshots()
  .map((snap) => snap.docs.map((d) => mapEventDoc({...d.data(), 'id': d.id})).toList())
- .handleError((e) => debugPrint('MiloDb watchEvents note: $e'));
+ .handleError((e) {
+ debugPrint('MiloDb watchEvents note: $e');
+ return <EventModel>[];
+ });
  } catch (e) {
- return Stream.value(MockData.events);
+ return Stream.value([]);
  }
  }
 
@@ -204,18 +173,17 @@ class MiloDbService {
  try {
  final snapshot = await db
  .collection('bookings')
+ .where('userId', isEqualTo: userId)
  .orderBy('created_at', descending: true)
  .limit(200)
  .get();
  final rows = snapshot.docs.map((d) => d.data()).toList();
- if (rows.isNotEmpty) {
  return rows.map(_mapDocToBookedTicket).toList();
- }
  } catch (e) {
- debugPrint('MiloDb Bookings Note: $e');
+   debugPrint('MiloDb getUserBookings note: $e');
  }
  }
- return MockData.initialBookings;
+ return [];
  }
 
  /// Create New Booking in Firestore
@@ -276,9 +244,9 @@ class MiloDbService {
  if (rows.isNotEmpty) return rows.map(_mapDocToBeacon).toList();
  } catch (e) {
  debugPrint('MiloDb Beacons Note: $e');
- }
- }
- return MockData.liveBeacons;
+      }
+    }
+    return [];
  }
 
  /// Create Spontaneous Beacon in Firestore
@@ -570,7 +538,7 @@ class MiloDbService {
  isTrending: json['is_trending'] ?? false,
  googleMapsUrl: json['google_maps_url']?.toString() ?? 'https://maps.google.com/?q=Event+Venue',
  description: json['description']?.toString() ?? 'Live event on Jhoomo app',
- ticketTiers: tiers.isNotEmpty ? tiers : MockData.events.first.ticketTiers,
+      ticketTiers: tiers,
  customTermsAndConditions: json['refund_policy']?.toString() ?? '',
  );
  }
@@ -645,7 +613,7 @@ class MiloDbService {
   tags: const ['Verified'],
   ticketsLeft: 42,
   description: 'Jhoomo Official Event Pass',
-  ticketTiers: MockData.events.first.ticketTiers,
+      ticketTiers: const [],
   ),
   tier: TicketTier(
   id: json['tier_id']?.toString() ?? firstItem['tierId']?.toString() ?? 'tier_1',

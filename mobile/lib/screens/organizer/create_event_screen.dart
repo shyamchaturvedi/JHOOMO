@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/models.dart';
 import '../../services/milo_db_service.dart';
 import '../../services/milo_session_service.dart';
-import '../../services/mock_data.dart';
+
 import '../../theme/milo_theme.dart';
 import '../legal_policy_screen.dart';
 
@@ -787,7 +787,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
  customTermsAndConditions: _customTermsCtrl.text.trim(),
  ticketTiers: _customTicketTiers,
  );
- MockData.events.insert(0, newEvent);
+ 
 
  if (!mounted) return;
  Navigator.pop(context);

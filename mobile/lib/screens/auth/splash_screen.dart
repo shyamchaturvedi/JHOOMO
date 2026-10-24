@@ -266,7 +266,7 @@ class _SplashScreenState extends State<SplashScreen>
                               children: [
                                 Text(
                                   'Jhoo',
-                                  style: GoogleFonts.outfit(
+                                  style: GoogleFonts.inter(
                                     fontSize: 38,
                                     fontWeight: FontWeight.w900,
                                     color: const Color(0xFF0F172A),
@@ -275,7 +275,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 ),
                                 Text(
                                   'mo',
-                                  style: GoogleFonts.outfit(
+                                  style: GoogleFonts.inter(
                                     fontSize: 38,
                                     fontWeight: FontWeight.w900,
                                     color: JhoomoTokens.primary,

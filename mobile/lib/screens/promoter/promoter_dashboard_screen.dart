@@ -6,7 +6,7 @@ import '../../config.dart';
 import '../../services/milo_db_service.dart';
 import '../../services/milo_promoter_tracking_service.dart';
 import '../../services/milo_session_service.dart';
-import '../../services/mock_data.dart';
+
 import '../../theme/milo_theme.dart';
 import '../notifications_screen.dart';
 
@@ -28,7 +28,7 @@ class _PromoterDashboardScreenState extends State<PromoterDashboardScreen> {
   final _service = MiloPromoterTrackingService.instance;
   int _activeNavIndex = 0; // 0: Overview/Stats, 1: My Links, 2: Realtime Sales, 3: Profile/Payout
   String _activeTab = 'MY_LINKS'; // 'MY_LINKS' | 'SALES_LOG'
-  List<EventModel> _events = MockData.events;
+  List<EventModel> _events = [];
 
   @override
   void initState() {

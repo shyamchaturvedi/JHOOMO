@@ -185,16 +185,6 @@ class MiloAuthService {
    {'type': 'privacy', 'granted': true},
    ],
    );
-   await db.collection('users').doc(user.uid).set({
-   'name': name,
-   'displayName': name,
-   'city': city,
-   'vibes': vibes,
-   'bio': bio,
-   'discoverable': true,
-   'updated_at': FieldValue.serverTimestamp(),
-   'updatedAt': FieldValue.serverTimestamp(),
-   }, SetOptions(merge: true));
    return null;
    } on MiloApiException catch (e) {
    debugPrint('MiloAuth saveProfile error: ${e.message}');
@@ -206,12 +196,16 @@ class MiloAuthService {
    }
 
   /// Roles are owned by the server. Local role switching is allowed only for
-  /// customer/staff previews or debug builds; verified upgrades go through
+  /// customer/staff previews in debug builds; verified upgrades go through
   /// KYC / promoter onboarding callables.
   Future<String?> upgradeRole(MiloRole role) async {
-  if (role == MiloRole.customer || role == MiloRole.staff || kDebugMode) {
-  await MiloSessionService.updateRole(role);
-  return null;
+  if (role == MiloRole.customer) {
+    await MiloSessionService.updateRole(role);
+    return null;
+  }
+  if (role == MiloRole.staff && kDebugMode) {
+    await MiloSessionService.updateRole(role);
+    return null;
   }
   return 'Role upgrades require verification. Complete KYC or the promoter application to continue.';
   }

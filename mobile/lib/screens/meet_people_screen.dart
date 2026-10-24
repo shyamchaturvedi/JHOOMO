@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
-import '../services/mock_data.dart';
+
 import '../theme/milo_theme.dart';
 import 'chat/chat_conversation_screen.dart';
 
@@ -221,7 +221,7 @@ class _MeetPeopleScreenState extends State<MeetPeopleScreen> with SingleTickerPr
  }
 
  Widget _buildDeckView() {
- final profiles = MockData.discoveryProfiles;
+  final profiles = <DiscoveryProfile>[];
  if (profiles.isEmpty) return const SizedBox();
  final user = profiles[_currentCardIndex % profiles.length];
 
@@ -460,7 +460,7 @@ class _MeetPeopleScreenState extends State<MeetPeopleScreen> with SingleTickerPr
  ];
 
  Widget _buildRadarListView() {
- final filteredProfiles = MockData.discoveryProfiles.where((user) {
+  final filteredProfiles = <DiscoveryProfile>[];
  if (_selectedMatchCategory == 'All') return true;
  final clean = _selectedMatchCategory.replaceAll(RegExp(r'[^\w\s/&]'), '').trim();
  return user.matchCategory.toLowerCase().contains(clean.toLowerCase()) ||
