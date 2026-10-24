@@ -24,28 +24,160 @@ class MiloDbService {
 
  /// Ensure demo data exists in Firestore so every panel has real records.
  Future<void> ensureSeeded() async {
- if (_seeded || _seeding) return;
- final db = _db;
- if (db == null) return;
- _seeding = true;
- try {
- // Admin allowlist (phone numbers that may grant Super Admin access).
- final adminDoc = await db.collection('milo_config').doc('admins').get();
- if (!adminDoc.exists) {
- await db.collection('milo_config').doc('admins').set({
- 'phones': [],
- 'note': 'Add phone numbers (10 digit, no +91) allowed to select Super Admin role.',
- });
- }
+    if (_seeded || _seeding) return;
+    final db = _db;
+    if (db == null) return;
+    _seeding = true;
+    try {
+      // 1. Admin config
+      final adminDoc = await db.collection('milo_config').doc('admins').get();
+      if (!adminDoc.exists) {
+        await db.collection('milo_config').doc('admins').set({
+          'phones': [],
+          'note': 'Super Admin allowed phone numbers',
+        });
+      }
 
- _seeded = true;
- debugPrint('MiloDb: Firestore seed complete.');
- } catch (e) {
- debugPrint('MiloDb seed note: $e');
- } finally {
- _seeding = false;
- }
- }
+      // 2. Clean dummy collections data if any lingering
+      final dummyCollections = ['beacons', 'cabs', 'meets', 'rooms', 'participants'];
+      for (final coll in dummyCollections) {
+        try {
+          final snap = await db.collection(coll).limit(20).get();
+          for (final doc in snap.docs) {
+            await doc.reference.delete();
+          }
+        } catch (_) {}
+      }
+
+      // 3. Clean old events (except the 5 target ones)
+      final curatedIds = {
+        'ev_lucknow',
+        'ev_kanpur',
+        'ev_agra',
+        'ev_delhi',
+        'ev_mumbai',
+      };
+      try {
+        final evSnap = await db.collection('events').get();
+        for (final doc in evSnap.docs) {
+          if (!curatedIds.contains(doc.id)) {
+            await doc.reference.delete();
+          }
+        }
+      } catch (_) {}
+
+      // 4. Seed the 5 Curated Events: Lucknow, Kanpur, Agra, Delhi, Mumbai
+      final curatedEvents = [
+        {
+          'id': 'ev_lucknow',
+          'title': 'Sunidhi Chauhan Live in Concert - Lucknow',
+          'category': 'Concert',
+          'city': 'Lucknow',
+          'venue': 'Ekana International Stadium, Sector 7, Gomti Nagar Ext',
+          'date': '2026-11-14T19:00:00Z',
+          'banner': 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+          'rating': 4.9,
+          'ratingCount': 2840,
+          'price': 999.0,
+          'soldOut': false,
+          'featured': true,
+          'description': 'Experience an electrifying musical night with Bollywood superstar Sunidhi Chauhan performing her greatest chartbusters live at Ekana Stadium, Lucknow.',
+          'ticketTiers': [
+            {'id': 't1', 'name': 'Silver Phase 1', 'price': 999.0, 'available': 450},
+            {'id': 't2', 'name': 'Gold Fanpit', 'price': 2499.0, 'available': 150},
+            {'id': 't3', 'name': 'VIP Lounge Table', 'price': 4999.0, 'available': 40},
+          ],
+        },
+        {
+          'id': 'ev_kanpur',
+          'title': 'Kanpur EDM Rave & Neon Beats Fest',
+          'category': 'Music Festival',
+          'city': 'Kanpur',
+          'venue': 'Green Park Stadium Ground, Civil Lines',
+          'date': '2026-11-20T18:00:00Z',
+          'banner': 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80',
+          'rating': 4.8,
+          'ratingCount': 1420,
+          'price': 699.0,
+          'soldOut': false,
+          'featured': true,
+          'description': 'Kanpurs biggest electronic dance music festival featuring international DJs, visual laser mapping, food trucks, and unforgettable festival vibes.',
+          'ticketTiers': [
+            {'id': 't1', 'name': 'Early Bird GA', 'price': 699.0, 'available': 300},
+            {'id': 't2', 'name': 'VIP Stage Access', 'price': 1799.0, 'available': 90},
+          ],
+        },
+        {
+          'id': 'ev_agra',
+          'title': 'Taj Heritage Sufi & Ghazal Night',
+          'category': 'Sufi & Cultural',
+          'city': 'Agra',
+          'venue': 'Taj Heritage Courtyard, Fatehabad Road',
+          'date': '2026-11-27T19:30:00Z',
+          'banner': 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=1200&q=80',
+          'rating': 4.95,
+          'ratingCount': 960,
+          'price': 799.0,
+          'soldOut': false,
+          'featured': true,
+          'description': 'An enchanting, soulful evening of classical Sufi melodies, live qawwali, and ghazals under the starry Agra skies with curated Awadhi & Mughlai delicacies.',
+          'ticketTiers': [
+            {'id': 't1', 'name': 'Courtyard Seating', 'price': 799.0, 'available': 200},
+            {'id': 't2', 'name': 'Royal Diwan Front', 'price': 1999.0, 'available': 60},
+          ],
+        },
+        {
+          'id': 'ev_delhi',
+          'title': 'Delhi Comic Con & Pop Culture Expo',
+          'category': 'Expo & Pop Culture',
+          'city': 'Delhi',
+          'venue': 'Pragati Maidan, Hall 4, Mathura Road, New Delhi',
+          'date': '2026-12-05T11:00:00Z',
+          'banner': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+          'rating': 4.88,
+          'ratingCount': 5320,
+          'price': 899.0,
+          'soldOut': false,
+          'featured': true,
+          'description': 'The ultimate pop culture celebration in NCR! Cosplay contests, celebrity meet-and-greets, exclusive merch stalls, gaming zones, and anime screenings.',
+          'ticketTiers': [
+            {'id': 't1', 'name': 'Single Day Pass', 'price': 899.0, 'available': 500},
+            {'id': 't2', 'name': 'Super Fan 3-Day Pass', 'price': 2299.0, 'available': 120},
+          ],
+        },
+        {
+          'id': 'ev_mumbai',
+          'title': 'Mumbai Sunset Yacht & Sundowner Party',
+          'category': 'Nightlife & Experience',
+          'city': 'Mumbai',
+          'venue': 'Jetty 5, Gateway of India, Colaba',
+          'date': '2026-12-12T16:30:00Z',
+          'banner': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+          'rating': 4.92,
+          'ratingCount': 3110,
+          'price': 1499.0,
+          'soldOut': false,
+          'featured': true,
+          'description': 'Sail into the Arabian Sea with Mumbais most exclusive yacht sundowner. Live deep house DJs, premium cocktails, and panoramic sunset views across the skyline.',
+          'ticketTiers': [
+            {'id': 't1', 'name': 'Sundowner Cruise Pass', 'price': 1499.0, 'available': 80},
+            {'id': 't2', 'name': 'VIP Deck + Drinks', 'price': 3499.0, 'available': 25},
+          ],
+        },
+      ];
+
+      for (final ev in curatedEvents) {
+        await db.collection('events').doc(ev['id'] as String).set(ev, SetOptions(merge: true));
+      }
+
+      _seeded = true;
+      debugPrint('MiloDb: 5 Curated Events Seeded for Lucknow, Kanpur, Agra, Delhi, Mumbai.');
+    } catch (e) {
+      debugPrint('MiloDb seed note: $e');
+    } finally {
+      _seeding = false;
+    }
+  }
 
  /// Fetch Live Events from Firestore
  Future<List<EventModel>> getEvents({String? city, String? category}) async {
