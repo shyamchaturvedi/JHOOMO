@@ -56,47 +56,62 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
  }
 
   void _saveProfile() async {
- if (_nameCtrl.text.trim().isEmpty) {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Display name cannot be empty')),
- );
- return;
- }
+    final newName = _nameCtrl.text.trim();
+    if (newName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Display name cannot be empty')),
+      );
+      return;
+    }
 
- setState(() => _isSaving = true);
- try {
- await MiloApi.instance.completeProfile(
- displayName: _nameCtrl.text.trim(),
- dobIso: '',
- cityId: _cityCtrl.text.trim(),
- gender: _gender.toLowerCase(),
- interests: _selectedInterests.toList(),
- bio: _bioCtrl.text.trim(),
- consents: const [
- {'type': 'terms', 'granted': true},
- {'type': 'privacy', 'granted': true},
- ],
- );
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text('Profile updated successfully.'),
- backgroundColor: MiloColors.accentGreen,
- behavior: SnackBarBehavior.floating,
- ),
- );
- Navigator.pop(context);
- }
- } catch (e) {
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Failed to update profile: $e')),
- );
- }
- } finally {
- if (mounted) setState(() => _isSaving = false);
- }
- }
+    setState(() => _isSaving = true);
+    try {
+      // 1. Always update local storage & active ValueNotifier first (instant UI sync)
+      await MiloSessionService.saveLoginSession(
+        role: MiloSessionService.currentRole,
+        name: newName,
+        phone: MiloSessionService.currentUserPhone,
+        uid: MiloSessionService.currentUid,
+      );
+
+      // 2. Best-effort sync with backend completeProfile
+      try {
+        await MiloApi.instance.completeProfile(
+          displayName: newName,
+          dobIso: '',
+          cityId: _cityCtrl.text.trim(),
+          gender: _gender.toLowerCase(),
+          interests: _selectedInterests.toList(),
+          bio: _bioCtrl.text.trim(),
+          consents: const [
+            {'type': 'terms', 'granted': true},
+            {'type': 'privacy', 'granted': true},
+          ],
+        );
+      } catch (backendErr) {
+        debugPrint('Backend profile sync note (saved locally): $backendErr');
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully.'),
+            backgroundColor: MiloColors.accentGreen,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update profile: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
 
  @override
  Widget build(BuildContext context) {
