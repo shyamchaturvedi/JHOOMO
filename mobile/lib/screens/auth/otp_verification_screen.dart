@@ -77,22 +77,40 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
  }
 
   Future<void> _afterVerified() async {
-  if (_navigated || !mounted) return;
-  _navigated = true;
+    if (_navigated || !mounted) return;
+    _navigated = true;
 
-  final hasProfile = await MiloAuthService.instance.hasProfile();
-  if (!mounted) return;
-  if (hasProfile) {
-  await MiloAuthService.instance.restoreSession();
-  if (!mounted) return;
-  LoginRouter.go(context, MiloSessionService.currentRoleNotifier.value);
-  return;
-  }
+    final auth = MiloAuthService.instance;
+    final hasProfile = await auth.hasProfile();
+    if (!mounted) return;
 
-  Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(builder: (context) => ProfileSetupScreen(phoneNumber: widget.phoneNumber)),
-  );
+    if (hasProfile) {
+      await auth.restoreSession();
+    } else {
+      // BookMyShow Style: Auto-provision a default profile so the user enters immediately
+      final defaultName = 'JHOOMO User';
+      final phone = widget.phoneNumber.isNotEmpty ? widget.phoneNumber : auth.pendingPhone;
+      final uid = auth.uid.isNotEmpty ? auth.uid : 'usr_${DateTime.now().millisecondsSinceEpoch}';
+
+      await MiloSessionService.saveLoginSession(
+        role: MiloRole.customer,
+        name: defaultName,
+        phone: phone.startsWith('+') ? phone : '+91 $phone',
+        uid: uid,
+      );
+
+      // Save to server in the background
+      auth.saveProfile(
+        name: defaultName,
+        phone: phone,
+        dobIso: '2000-01-01',
+        city: 'Lucknow',
+        role: MiloRole.customer,
+      ).catchError((_) => null);
+    }
+
+    if (!mounted) return;
+    LoginRouter.go(context, MiloRole.customer);
   }
 
  @override

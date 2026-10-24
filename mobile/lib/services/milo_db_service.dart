@@ -223,7 +223,110 @@ class MiloDbService {
         debugPrint('MiloDb getEvents error: $e');
       }
     }
-    return [];
+    return _getFallbackCuratedEvents(city: city, category: category);
+  }
+
+  List<EventModel> _getFallbackCuratedEvents({String? city, String? category}) {
+    final list = [
+      const EventModel(
+        id: 'ev_lucknow',
+        title: 'Sunidhi Chauhan Live in Concert - Lucknow',
+        category: 'Concert',
+        date: 'Sat, 14 Nov 2026',
+        time: '07:00 PM',
+        venue: 'Ekana International Stadium, Sector 7, Gomti Nagar Ext',
+        city: 'Lucknow',
+        startingPrice: 999.0,
+        imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+        organizerName: 'JHOOMO Live Experiences',
+        tags: ['Bollywood', 'Live Concert', 'Trending'],
+        ticketsLeft: 450,
+        description: 'Experience an electrifying musical night with Bollywood superstar Sunidhi Chauhan performing her greatest chartbusters live at Ekana Stadium, Lucknow.',
+        ticketTiers: [
+          TicketTier(id: 't1', name: 'Silver Phase 1', price: 999.0, description: 'Standing Zone entry', perks: ['Arena Access'], available: 450),
+          TicketTier(id: 't2', name: 'Gold Fanpit', price: 2499.0, description: 'Front row fanpit stage view', perks: ['Fanpit Access'], available: 150),
+        ],
+      ),
+      const EventModel(
+        id: 'ev_kanpur',
+        title: 'Kanpur EDM Rave & Neon Beats Fest',
+        category: 'Music Festival',
+        date: 'Fri, 20 Nov 2026',
+        time: '06:00 PM',
+        venue: 'Green Park Stadium Ground, Civil Lines',
+        city: 'Kanpur',
+        startingPrice: 699.0,
+        imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80',
+        organizerName: 'Neon Pulse Events',
+        tags: ['EDM', 'Rave', 'Festival'],
+        ticketsLeft: 300,
+        description: 'Kanpurs biggest electronic dance music festival featuring top DJs, laser visual shows, and food trucks.',
+        ticketTiers: [
+          TicketTier(id: 't1', name: 'Early Bird GA', price: 699.0, description: 'General entry pass', perks: ['Festival Access'], available: 300),
+        ],
+      ),
+      const EventModel(
+        id: 'ev_agra',
+        title: 'Taj Heritage Sufi & Ghazal Night',
+        category: 'Cultural & Sufi',
+        date: 'Fri, 27 Nov 2026',
+        time: '07:30 PM',
+        venue: 'Taj Heritage Courtyard, Fatehabad Road',
+        city: 'Agra',
+        startingPrice: 799.0,
+        imageUrl: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=1200&q=80',
+        organizerName: 'Awadh Heritage Society',
+        tags: ['Sufi', 'Qawwali', 'Heritage'],
+        ticketsLeft: 200,
+        description: 'An enchanting, soulful evening of classical Sufi melodies, live qawwali, and ghazals with authentic Awadhi delicacies.',
+        ticketTiers: [
+          TicketTier(id: 't1', name: 'Courtyard Pass', price: 799.0, description: 'Seated entry pass', perks: ['Seated Access'], available: 200),
+        ],
+      ),
+      const EventModel(
+        id: 'ev_delhi',
+        title: 'Delhi Comic Con & Pop Culture Expo',
+        category: 'Expo & Pop Culture',
+        date: 'Sat, 05 Dec 2026',
+        time: '11:00 AM',
+        venue: 'Pragati Maidan, Hall 4, Mathura Road, New Delhi',
+        city: 'Delhi',
+        startingPrice: 899.0,
+        imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+        organizerName: 'Pop Culture India',
+        tags: ['Comic Con', 'Anime', 'Gaming'],
+        ticketsLeft: 500,
+        description: 'The ultimate pop culture celebration in NCR! Cosplay contests, celebrity meet-and-greets, gaming zones, and anime screenings.',
+        ticketTiers: [
+          TicketTier(id: 't1', name: 'Single Day Pass', price: 899.0, description: 'Full day exhibition access', perks: ['Expo Access'], available: 500),
+        ],
+      ),
+      const EventModel(
+        id: 'ev_mumbai',
+        title: 'Mumbai Sunset Yacht & Sundowner Party',
+        category: 'Nightlife & Experience',
+        date: 'Sat, 12 Dec 2026',
+        time: '04:30 PM',
+        venue: 'Jetty 5, Gateway of India, Colaba',
+        city: 'Mumbai',
+        startingPrice: 1499.0,
+        imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+        organizerName: 'Marine Horizon Experiences',
+        tags: ['Yacht', 'Sunset', 'Sundowner'],
+        ticketsLeft: 80,
+        description: 'Sail into the Arabian Sea with Mumbai most exclusive yacht sundowner. Live deep house DJs, premium cocktails, and sunset views.',
+        ticketTiers: [
+          TicketTier(id: 't1', name: 'Sundowner Cruise Pass', price: 1499.0, description: 'Yacht access and sunset party', perks: ['Cruise Access'], available: 80),
+        ],
+      ),
+    ];
+
+    if (city != null && city != 'All Cities' && city != 'All') {
+      final target = city.toLowerCase().replaceAll('-ncr', '').trim();
+      final filtered = list.where((e) => e.city.toLowerCase().contains(target)).toList();
+      if (filtered.isNotEmpty) return filtered;
+    }
+    return list;
   }
 
  List<EventModel> _sortedByCreatedDesc(List<EventModel> events, List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {

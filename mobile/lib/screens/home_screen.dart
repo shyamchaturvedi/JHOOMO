@@ -79,6 +79,15 @@ class _HomeScreenState extends State<HomeScreen> {
  super.dispose();
  }
 
+  Future<void> _autoDetectLocation() async {
+    try {
+      final detected = await MiloLocationService.instance.detectCurrentCity();
+      if (detected != null && detected.isNotEmpty && mounted) {
+        setState(() => _selectedCity = detected);
+      }
+    } catch (_) {}
+  }
+
   Future<void> _loadLiveData() async {
  try {
  final events = await MiloDbService.instance.getEvents();
