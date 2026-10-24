@@ -483,7 +483,7 @@ class _PromoterDashboardScreenState extends State<PromoterDashboardScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           gradient: JhoomoGradients.brandIcon,
                           shape: BoxShape.circle,
                         ),
@@ -813,8 +813,8 @@ class _PromoterDashboardScreenState extends State<PromoterDashboardScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: JhoomoTokens.outline),
-        boxShadow: [
-          const BoxShadow(
+        boxShadow: const [
+          BoxShadow(
             color: Color(0x05000000),
             blurRadius: 8,
             offset: Offset(0, 2),
