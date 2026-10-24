@@ -38,6 +38,16 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="jhoomo" android:host="m"/>
             </intent-filter>
+            <!-- App Links: direct open for web links -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="milo-sandy-three.vercel.app" android:pathPrefix="/e/"/>
+                <data android:scheme="https" android:host="milo-sandy-three.vercel.app" android:pathPrefix="/m/"/>
+                <data android:scheme="https" android:host="milo-sandy-three.vercel.app" android:pathPrefix="/pass/"/>
+                <data android:scheme="https" android:host="milo-sandy-three.vercel.app" android:pathPrefix="/promoter/"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
